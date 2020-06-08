@@ -37,3 +37,10 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# data folders
+data/raw
+data/tidy
+
+# reports 
+communication/reports
