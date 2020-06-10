@@ -116,13 +116,16 @@ az_med_age <- get_acs(
   state = "AZ"
 )
 
+az_med_age <- az_med_age %>% 
+  mutate(NAME = str_replace(az_med_age$NAME, " County, Arizona", ""))
+
 az_catch_med_age <- az_med_age %>%
   filter(NAME %in% c(
-    "Cochise County, Arizona",
-    "Pima County, Arizona",
-    "Pinal County, Arizona",
-    "Santa Cruz County, Arizona",
-    "Yuma County, Arizona"
+    "Cochise",
+    "Pima",
+    "Pinal",
+    "Santa Cruz",
+    "Yuma"
   ))
 
 # for MEDIAN AGE BY SEX (HISPANIC OR LATINO)
@@ -139,5 +142,6 @@ az_catch_med_age %>%
   group_by(NAME) %>%
   filter(variable == "B01002I_001") %>%
   select(NAME, estimate) %>%
-  kable(col.names = c("County", "Median Age"))
+  kable(col.names = c("County", "Median Age"),
+        caption = "ACS 5 Year (2014-2018) population estimates for Hispanic or Latino")
 

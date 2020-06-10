@@ -25,10 +25,10 @@ The [hispanic_age_proportion.R](scripts/hispanic_age_proportion.R) script will h
 ### What is the median age of the Hispanic population in southern Arizona?
 
 
-|County                     | Median Age|
-|:--------------------------|----------:|
-|Cochise County, Arizona    |       30.1|
-|Pima County, Arizona       |       28.3|
-|Pinal County, Arizona      |       28.7|
-|Santa Cruz County, Arizona |       31.9|
-|Yuma County, Arizona       |       27.5|
+|County     | Median Age|
+|:----------|----------:|
+|Cochise    |       30.1|
+|Pima       |       28.3|
+|Pinal      |       28.7|
+|Santa Cruz |       31.9|
+|Yuma       |       27.5|
