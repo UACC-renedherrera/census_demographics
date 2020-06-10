@@ -9,6 +9,7 @@ library(tidyverse)
 library(knitr)
 library(ggthemes)
 library(tidycensus)
+library(stringr)
 
 # read data ----
 
@@ -29,16 +30,20 @@ az_sex_by_age <- get_acs(
 
 # list county names
 counties <- unique(az_sex_by_age$NAME)
-counties
+
+# use stringr to clean up county name
+# and save
+az_sex_by_age <- az_sex_by_age %>% 
+  mutate(NAME = str_replace(az_sex_by_age$NAME, " County, Arizona", ""))
 
 # filter to southern az catchment 
 az_catch_sex_by_age <- az_sex_by_age %>%
   filter(NAME %in% c(
-    "Cochise County, Arizona",
-    "Pima County, Arizona",
-    "Pinal County, Arizona",
-    "Santa Cruz County, Arizona",
-    "Yuma County, Arizona"
+    "Cochise",
+    "Pima",
+    "Pinal",
+    "Santa Cruz",
+    "Yuma"
   ))
 
 # load and list variables from acs 5 year 2018 dataset
@@ -65,25 +70,25 @@ az_catch_sex_by_age <- az_catch_sex_by_age %>%
   group_by(NAME) %>%
   filter(variable %in% age_sex_var)
 
-# filter to show total population for each county 
+# filter to show total population (hispanic or latino) for each county 
 age_sex_var_totals <- az_catch_sex_by_age %>%
   filter(variable == "B01001I_001")
 
-# filter to show hispanic only values for each county
-# calculate sum total of hispanic population in each county 
+# for each county, show the population of hispanic or latino age 55+
 az_catch_sex_by_age <- az_catch_sex_by_age %>%
   filter(variable != "B01001I_001") %>%
   summarise(hispanic_population = sum(estimate))
 
-# join hispanic total with county total for each county 
+# for each county, show both the age 55+ and total Hispanic or Latino
 az_catch_sex_by_age <- inner_join(az_catch_sex_by_age, age_sex_var_totals)
 
-# calculate the proportion of hispanic in each county 
+# for each county, calculate the proportion of hispanic or latino age 55+
 # select columns and display data grouped by county 
 az_catch_sex_by_age %>%
   mutate(percentage_hispanic = hispanic_population / estimate) %>%
   select(NAME, hispanic_population, estimate, percentage_hispanic) %>%
-  kable(col.names = c("County", "Hispanic", "Total", "Hispanic Proportion"))
+  kable(col.names = c("County", "Age 55+", "Total", "Prop 55+"),
+        caption = "ACS 5 Year (2014-2018) population estimates for Hispanic or Latino")
 
 # calculate and display values as a sum for the five counties combined 
 az_catch_sex_by_age %>%
@@ -92,7 +97,8 @@ az_catch_sex_by_age %>%
     catch_total = sum(estimate)
   ) %>%
   mutate(hispanic_percent = hispanic_total / catch_total) %>%
-  kable(col.names = c("Hispanic", "Total", "Hispanic Proportion"))
+  kable(col.names = c("Age 55+", "Total", "Prop 55+"),
+        caption = "ACS 5 Year (2014-2018) population estimates for Hispanic or Latino")
 
 # MEDIAN AGE BY SEX (HISPANIC OR LATINO) ----
 # Survey/Program: American Community Survey
