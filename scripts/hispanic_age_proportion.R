@@ -43,8 +43,7 @@ az_catch_sex_by_age <- az_sex_by_age %>%
 
 # load and list variables from acs 5 year 2018 dataset
 acs_20128_var <- load_variables(2018, "acs5", cache = TRUE)
-view(acs_20128_var)
-# FYI total for each county is = "B01001I_001"
+# view(acs_20128_var)
 
 # SEX BY AGE (HISPANIC OR LATINO)
 # save variables of interest to value 
