@@ -136,6 +136,7 @@ med_age_var <- c(
   "B01002I_003" #Estimate!!Median age --!!Female
 ) 
 
+# display median age for hispanic latino in each county
 # group by county and 
 # apply filter to show median age by sex of Hispanic in each county
 az_catch_med_age %>%
