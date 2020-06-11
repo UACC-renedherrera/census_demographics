@@ -90,7 +90,7 @@ az_catch_sex_by_age %>%
   kable(col.names = c("County", "Age 55+", "Total", "Prop 55+"),
         caption = "ACS 5 Year (2014-2018) population estimates for Hispanic or Latino")
 
-# calculate and display values as a sum for the five counties combined 
+# for the catchment altogether; calculate the proportion of hispanic or latino age 55+
 az_catch_sex_by_age %>%
   summarize(
     hispanic_total = sum(hispanic_population),
