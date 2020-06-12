@@ -47,7 +47,7 @@ az_catch_sex_by_age <- az_sex_by_age %>%
   ))
 
 # load and list variables from acs 5 year 2018 dataset
-acs_20128_var <- load_variables(2018, "acs5", cache = TRUE)
+var_acs_2018_acs5 <- load_variables(2018, "acs5", cache = FALSE)
 # view(acs_20128_var)
 
 # SEX BY AGE (HISPANIC OR LATINO)
@@ -100,6 +100,66 @@ az_catch_sex_by_age %>%
   kable(col.names = c("Age 55+", "Total", "Prop 55+"),
         caption = "ACS 5 Year (2014-2018) population estimates for Hispanic or Latino")
 
+# SEX BY AGE (All race) TOTAL ----
+# determine the total population in the county
+
+# uset table S0101
+az_sex_by_age_tot <- get_acs(
+  geography = "county",
+  table = "S0101",
+  cache_table = TRUE,
+  year = 2018,
+  state = "AZ"
+)
+
+# use stringr to clean up county name
+# and save
+az_sex_by_age_tot <- az_sex_by_age_tot %>% 
+  mutate(NAME = str_replace(az_sex_by_age_tot$NAME, " County, Arizona", ""))
+
+# filter to southern az catchment 
+az_sex_by_age_tot <- az_sex_by_age_tot %>%
+  filter(NAME %in% c(
+    "Cochise",
+    "Pima",
+    "Pinal",
+    "Santa Cruz",
+    "Yuma"
+  ))
+
+# set value to filter age groups
+age55 <- c("S0101_C01_013", #age 55-59 years
+           "S0101_C01_014", #age 60-64 years
+           "S0101_C01_015", #age 65-69 yearsv
+           "S0101_C01_016", #age 70-74 years
+           "S0101_C01_017", #age 75-79 years
+           "S0101_C01_018", #age 80-84 years
+           "S0101_C01_019") #age 85+ years
+
+# filter total all race population estimate to age55+
+az_sex_by_age_tot <- az_sex_by_age_tot %>% 
+  filter(variable %in% age55)
+
+# prepare table to join
+# set variables
+az_sex_by_age_tot <- az_sex_by_age_tot %>% 
+  transmute(NAME = NAME,
+            variable = variable,
+            tot_pop = estimate)
+
+# calculate total only
+az_sex_by_age_tot <- az_sex_by_age_tot %>% 
+  group_by(NAME) %>%
+  summarize(total_pop = sum(tot_pop))
+
+# join tables together
+# for each county, show both the age 55+ and total Hispanic or Latino
+az_catch_hisp_pop <- inner_join(az_catch_sex_by_age, az_sex_by_age_tot)
+
+# for each county
+# display from left to right, population age 55+
+# for hispanic latino only
+
 # MEDIAN AGE BY SEX (HISPANIC OR LATINO) ----
 # Survey/Program: American Community Survey
 # Universe: People who are Hispanic or Latino
@@ -145,4 +205,3 @@ az_catch_med_age %>%
   select(NAME, estimate) %>%
   kable(col.names = c("County", "Median Age"),
         caption = "ACS 5 Year (2014-2018) population estimates for Hispanic or Latino")
-
