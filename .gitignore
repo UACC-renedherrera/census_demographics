@@ -44,3 +44,7 @@ data/tidy
 
 # reports 
 communication/reports
+communication/dashboards/*.html
+communication/dashboards/*.pdf
+communication/dashboards/*.docx
+communication/dashboards/*.pptx
