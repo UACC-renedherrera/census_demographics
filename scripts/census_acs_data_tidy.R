@@ -75,6 +75,7 @@ race <- race %>%
 # "Native Hawaiian and Other Pacific Islander alone", 
 # "Some other race alone"
 
+# save race variables to value 
 var_race <- c("B02001_001", # total including all races 
               "B02001_002", # "White alone"
               "B02001_003", # "Black or African American alone", 
@@ -82,9 +83,11 @@ var_race <- c("B02001_001", # total including all races
               "B02001_005", # "Native Hawaiian and Other Pacific Islander alone",
               "B02001_006") # # "Some other race alone"
 
+# use race variables to filter 
 race <- race %>%
   filter(variable %in% var_race)
 
+# recode variables from code to label 
 race$variable <- recode(race$variable, "B02001_001" = "Total",
        "B02001_002" = "White",
        "B02001_003" = "Black",
@@ -92,7 +95,13 @@ race$variable <- recode(race$variable, "B02001_001" = "Total",
        "B02001_005" = "Native Hawaiian",
        "B02001_006" = "Other")
 
+# spread table to put each race on it's own column and county it's own row
 race %>% spread(variable, estimate)
+
+# collapse by summarizing
+race %>% group_by(NAME) %>%
+  summarize()
+  
 
 race_total <- race %>% group_by(NAME) %>%
   filter(variable == "Total")
