@@ -39,11 +39,12 @@ vignettes/*.pdf
 .Renviron
 
 # data folders
-data/raw
-data/tidy
+data/
 
 # reports 
 communication/reports
+
+# dashboards
 communication/dashboards/*.html
 communication/dashboards/*.pdf
 communication/dashboards/*.docx
