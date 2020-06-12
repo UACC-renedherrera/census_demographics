@@ -1,0 +1,73 @@
+---
+title: 'Southern Arizona: Population Demographics'
+author: "René D Herrera"
+date: "6/11/2020"
+output: 
+  flexdashboard::flex_dashboard:
+    storyboard: true
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+# setup ----
+library(tidycensus)
+library(tidyverse)
+library(stringr)
+library(knitr)
+
+# save catchment counties to value
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma")
+
+# RACE
+race <- get_acs(geography = "county",
+                   table = "B02001",
+                   state = "AZ",
+                   year = 2018,
+                   cache_table = TRUE)
+
+# use stringr to clean up county name
+# and save
+race <- race %>% 
+  mutate(NAME = str_replace(race$NAME, " County, Arizona", ""))
+
+# filter to southern az catchment 
+race <- race %>%
+  filter(NAME %in% counties)
+```
+
+### Frame 1
+
+```{r}
+race %>% group_by(NAME) %>%
+  filter(variable == "B02001_001") %>%
+  kable()
+```
+
+*** 
+
+This is the total population for each catchment county 
+
+### Frame 2 {data-commentary-width=400}
+
+```{r}
+```
+
+*** 
+
+This is the total population for each race for each catchment county 
+
+### Frame 3 {data-commentary-width=400}
+
+```{r}
+```
+
+*** 
+
+This is the total population of people age 55+ for each race for each catchment county 
