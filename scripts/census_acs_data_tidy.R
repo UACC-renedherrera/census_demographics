@@ -4,6 +4,7 @@ library(tidycensus)
 library(tidyverse)
 library(stringr)
 library(knitr)
+library(dataMaid)
 
 # library(tigris)
 
@@ -28,13 +29,6 @@ age_sex <- get_acs(geography = "county",
                    year = 2018,
                    cache_table = TRUE)
 
-# RACE
-race <- get_acs(geography = "county",
-                   table = "B02001",
-                   state = "AZ",
-                   year = 2018,
-                   cache_table = TRUE)
-
 # for age and sex ----
 # S0101
 # use stringr to clean up county name
@@ -46,6 +40,9 @@ age_sex <- age_sex %>%
 age_sex <- age_sex %>%
   filter(NAME %in% counties)
 
+# save to file
+write_rds(age_sex, "data/tidy/acs5_2018_age_sex.rds")
+
 # from AGE AND SEX
 # total population for each county
 # group by county
@@ -53,8 +50,66 @@ age_sex <- age_sex %>%
 age_sex %>% group_by(NAME) %>%
   filter(variable == "S0101_C01_001")
 
+# from age and sex
+# filter to age 60 and older
+# S0101_C01_028	
+# Estimate!!Total!!Total population!!SELECTED AGE CATEGORIES!!60 years and over	
+age_sex %>% group_by(NAME) %>%
+  filter(variable == "S0101_C01_028") #AGE CATEGORIES!!60 years and over	
+
+# show age 60 and older as proportion of total population
+# first filter to age 60 and older only 
+# save
+age_sex_60 <- age_sex %>% group_by(NAME) %>%
+  filter(variable == "S0101_C01_028") %>%
+  mutate("60+" = estimate)
+
+# then filter to total 
+# save
+age_sex_total <- age_sex %>% group_by(NAME) %>%
+  filter(variable == "S0101_C01_001") %>%
+  mutate(total = estimate)
+
+# last combine
+age_sex_profiles <- inner_join(age_sex_60, age_sex_total, by = c("GEOID", "NAME"))
+
+# select and rename columns
+age_sex_profiles <- age_sex_profiles %>%
+  select(GEOID, NAME, "60+", total) %>%
+  mutate("prop_60+" = round(`60+`/total, digits = 2))
+
+# testing
+# in progress
+age_sex_subject <- get_acs(geography = "county",
+                              variables = c(median_age = "S0101_C01_032",
+                                            total = "S0101_C01_001",
+                                            "age_60+" = "S0101_C01_028",
+                                            male_median_age = "S0101_C04_032",
+                                            male_total = "S0101_C04_001",
+                                            "male_age_60+" = "S0101_C04_028",
+                                            female_median_age = "S0101_C05_032",
+                                            female_total = "S0101_C05_001",
+                                            "female_age_60+" = "S0101_C05_028"),
+                       cache_table = TRUE,
+                       year = 2018,
+                       state = "AZ")
+age_sex_subject %>%
+  filter(variable == "male_total")
+
+# end test
+
 # for race ----
 # B02001
+
+# read data from acs 
+# RACE
+race <- get_acs(geography = "county",
+                table = "B02001",
+                state = "AZ",
+                year = 2018,
+                cache_table = TRUE)
+
+
 # total population by race for each county
 # group by county then race
 race
@@ -80,8 +135,8 @@ var_race <- c("B02001_001", # total including all races
               "B02001_002", # "White alone"
               "B02001_003", # "Black or African American alone", 
               "B02001_004", # "Asian alone"
-              "B02001_005", # "Native Hawaiian and Other Pacific Islander alone",
-              "B02001_006") # # "Some other race alone"
+              "B02001_005") # "Native Hawaiian and Other Pacific Islander alone",
+              #"B02001_006") # # "Some other race alone"
 
 # use race variables to filter 
 race <- race %>%
@@ -92,11 +147,63 @@ race$variable <- recode(race$variable, "B02001_001" = "Total",
        "B02001_002" = "White",
        "B02001_003" = "Black",
        "B02001_004" = "Asian",
-       "B02001_005" = "Native Hawaiian",
-       "B02001_006" = "Other")
+       "B02001_005" = "Native Hawaiian")
+       #"B02001_006" = "Other")
+
+# calculate "other" and add to table
+# sum named race as race_sub
+race_subtotal <- race %>% 
+  group_by(NAME) %>%
+  filter(variable != "Total") %>%
+  summarize(race_sub = sum(estimate)) 
+
+# generate total population for each county
+race_total <- race %>%
+  group_by(NAME) %>%
+  filter(variable == "Total") %>%
+  summarize(Total = sum(estimate))
+
+# combine total and subtotal to calculate "other"
+race_table <- full_join(race_subtotal, race_total)
+
+# calculate "other"
+race_other <- race_table %>%
+  mutate(other = Total - race_sub) %>%
+  select(NAME, "Other" = other) %>%
+  gather(Other,
+         key = "variable",
+         value = "estimate")
+  
+# add other variable back to original table
+race <- full_join(race, race_other)
+
+# convert race variable to factor
+race$variable <- as_factor(race$variable)
+
+# rearrange table in order by county then by race variable
+race <- race %>%
+  arrange(NAME, variable)
+
+# save data
+write_rds(race, "data/tidy/acs5_2018_race.rds")
 
 # spread table to put each race on it's own column and county it's own row
-race %>% spread(variable, estimate)
+race %>% 
+  select(NAME, variable, estimate) %>%
+  spread(variable, estimate) %>%
+  kable()
+
+# table of proportions by race
+race %>%
+  select(NAME, variable, estimate) %>%
+  spread(variable, estimate) %>%
+  mutate(White_prop = round(White / Total, digits = 2),
+         Black_prop = round(Black / Total, digits = 2),
+         Asian_prop = round(Asian / Total, digits = 2),
+         NH_prop = round(`Native Hawaiian` / Total, digits = 2),
+         Other_prop = round(Other / Total, digits = 2)) %>%
+  select(NAME, White_prop, Black_prop, Asian_prop, NH_prop, Other_prop) %>%
+  kable()
 
 # collapse by summarizing
 race %>% group_by(NAME) %>%
