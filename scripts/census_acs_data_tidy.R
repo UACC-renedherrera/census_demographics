@@ -299,3 +299,61 @@ race %>% group_by(NAME) %>%
 #   labs(title = "Household income by county in Arizona",
 #        subtitle = "2014-2018 American Community Survey") +
 #   theme_light()
+
+# Pima County ----
+
+# Total Population ----
+
+az_population_total <- get_acs(geography = "county",
+                   table = "B01003",
+                   state = "AZ",
+                   year = 2018,
+                   cache_table = TRUE)
+
+pima_population_total_acs5 <- az_population_total %>% filter(NAME == "Pima County, Arizona")
+
+# Population Race Proportions ----
+
+az_population_race <- get_acs(geography = "county",
+                               variables = c("WHITE ALONE" = "B01001A_001",
+                                             "BLACK OR AFRICAN AMERICAN ALONE" = "B01001B_001",
+                                             "AMERICAN INDIAN AND ALASKA NATIVE ALONE" = "B01001C_001",
+                                             "ASIAN ALONE" = "B01001D_001",
+                                             "NATIVE HAWAIIAN AND OTHER PACIFIC ISLANDER ALONE" = "B01001E_001",
+                                             "SOME OTHER RACE ALONE" = "B01001F_001",
+                                             "TWO OR MORE RACES" = "B01001G_001",
+                                             "WHITE ALONE, NOT HISPANIC OR LATINO" = "B01001H_001",
+                                             "HISPANIC OR LATINO" = "B01001I_001"),
+                               state = "AZ",
+                               year = 2018,
+                               cache_table = TRUE)
+
+write_rds(az_population_race, "data/tidy/county_by_race.rds")
+
+az_population_race %>% 
+  filter(NAME == "Pima County, Arizona") %>%
+  mutate(prop = round(estimate / sum(estimate), digits = 3)) %>%
+  ggplot(mapping = aes(x = prop, y = reorder(variable, prop))) +
+  geom_col() +
+  geom_label(aes(label = prop), nudge_x = .075) +
+  labs(title = "Population Proportion by Race",
+       subtitle = "Pima County, AZ",
+       x = "Proportion",
+       y = "Race / Ethnicity",
+       caption = "Source: U.S. Census Bureau, 2018 American Community Survey 5-Year Estimates")
+
+# Population Race by Age ---- 
+
+az_population_race <- get_acs(geography = "county",
+                              variables = c("WHITE ALONE" = "B01001A_001",
+                                            "BLACK OR AFRICAN AMERICAN ALONE" = "B01001B_001",
+                                            "AMERICAN INDIAN AND ALASKA NATIVE ALONE" = "B01001C_001",
+                                            "ASIAN ALONE" = "B01001D_001",
+                                            "NATIVE HAWAIIAN AND OTHER PACIFIC ISLANDER ALONE" = "B01001E_001",
+                                            "SOME OTHER RACE ALONE" = "B01001F_001",
+                                            "TWO OR MORE RACES" = "B01001G_001",
+                                            "WHITE ALONE, NOT HISPANIC OR LATINO" = "B01001H_001",
+                                            "HISPANIC OR LATINO" = "B01001I_001"),
+                              state = "AZ",
+                              year = 2018,
+                              cache_table = TRUE)
