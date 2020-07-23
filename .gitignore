@@ -49,3 +49,10 @@ communication/dashboards/*.html
 communication/dashboards/*.pdf
 communication/dashboards/*.docx
 communication/dashboards/*.pptx
+
+# file types
+*.pdf
+*.docx
+*.pptx
+*.html
+*.png
