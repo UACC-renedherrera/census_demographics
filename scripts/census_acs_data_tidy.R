@@ -4,6 +4,7 @@ library(tidycensus)
 library(tidyverse)
 library(stringr)
 library(knitr)
+library(purrr)
 library(dataMaid)
 
 # library(tigris)
@@ -467,7 +468,7 @@ az_population_race <- get_acs(
 # Estimates: 5-Year
 # Table ID: B01003
 #
-# Source: U.S. Census Bureau, 2018 American Community Survey 1-Year Estimates
+# Source: U.S. Census Bureau, 2018 American Community Survey 5-Year Estimates
 
 acs5_population_total_usa <- get_acs(
   geography = "us",
@@ -486,7 +487,7 @@ acs5_population_total_usa
 # Estimates: 5-Year
 # Table ID: B01003
 #
-# Source: U.S. Census Bureau, 2018 American Community Survey 1-Year Estimates
+# Source: U.S. Census Bureau, 2018 American Community Survey 5-Year Estimates
 
 acs5_population_total_az <- get_acs(
   geography = "state",
@@ -506,7 +507,7 @@ acs5_population_total_az
 # Estimates: 5-Year
 # Table ID: B01003
 #
-# Source: U.S. Census Bureau, 2018 American Community Survey 1-Year Estimates
+# Source: U.S. Census Bureau, 2018 American Community Survey 5-Year Estimates
 
 acs5_population_total_az_county <- get_acs(
   geography = "county",
@@ -575,6 +576,88 @@ acs5_age_sex %>%
   filter(NAME %in% counties) %>%
   filter(variable == "S0101_C05_001") %>%
   summarise(total = sum(estimate))
+
+# population USA hispanic or latino ----
+# ACS DEMOGRAPHIC AND HOUSING ESTIMATES
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: DP05
+#
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_hispanic_usa <- get_acs(
+  geography = "us",
+  variables = c("Hispanic or Latino (of any race)" = "DP05_0071P",
+                "White alone Not Hispanic or Latino" = "DP05_0077P",
+                "Black or African American alone Not Hispanic or Latino" = "DP05_0078P",
+                "American Indian and Alaska Native alone Not Hispanic or Latino" = "DP05_0079P"),
+  year = 2018,
+  cache_table = TRUE,
+  survey = "acs5"
+)
+
+acs5_hispanic_usa
+
+# population AZ hispanic or latino ----
+# ACS DEMOGRAPHIC AND HOUSING ESTIMATES
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: DP05
+#
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_hispanic_az <- get_acs(
+  geography = "state",
+  state = "AZ",
+  variables = c("Hispanic or Latino (of any race)" = "DP05_0071P",
+                "White alone Not Hispanic or Latino" = "DP05_0077P",
+                "Black or African American alone Not Hispanic or Latino" = "DP05_0078P",
+                "American Indian and Alaska Native alone Not Hispanic or Latino" = "DP05_0079P"),
+  year = 2018,
+  cache_table = TRUE,
+  survey = "acs5"
+)
+
+acs5_hispanic_az
+
+# population catchment hispanic or latino ----
+# ACS DEMOGRAPHIC AND HOUSING ESTIMATES
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: DP05
+#
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_hispanic_catch <- get_acs(
+  geography = "county",
+  state = "AZ",
+  variables = c("Hispanic or Latino (of any race)" = "DP05_0071",
+                "White alone Not Hispanic or Latino" = "DP05_0077",
+                "Black or African American alone Not Hispanic or Latino" = "DP05_0078",
+                "American Indian and Alaska Native alone Not Hispanic or Latino" = "DP05_0079",
+                "Total" = "DP05_0070"),
+  year = 2018,
+  cache_table = TRUE,
+  survey = "acs5"
+)
+
+val_catch_hisp <- acs5_hispanic_catch %>%
+  mutate(NAME = str_replace(acs5_hispanic_catch$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties,
+         variable == "Total") %>%
+  summarise(estimate = sum(estimate))
+
+acs5_hispanic_catch %>%
+  mutate(NAME = str_replace(acs5_hispanic_catch$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties,
+         variable != "Total") %>%
+  group_by(variable) %>%
+  summarise(estimate = sum(estimate)) %>%
+  mutate(total = val_catch_hisp,
+         prop = estimate / total)
 
 # population USA race White alone ----
 # RACE
@@ -735,7 +818,7 @@ acs5_population_race_az_county %>%
 # Year: 2010
 # Table ID: H2
 #
-# Source: U.S. Census Bureau, 2018 American Community Survey 1-Year Estimates
+# Source: U.S. Census Bureau, 2018 American Community Survey 5-Year Estimates
 
 population_rural_usa <- 27684999 / 131704730
 population_rural_usa
@@ -747,7 +830,7 @@ population_rural_usa
 # Year: 2010
 # Table ID: H2
 #
-# Source: U.S. Census Bureau, 2018 American Community Survey 1-Year Estimates
+# Source: U.S. Census Bureau, 2018 American Community Survey 5-Year Estimates
 
 population_rural_az <- 329022 / 2844526
 population_rural_az
@@ -759,7 +842,7 @@ population_rural_az
 # Year: 2010
 # Table ID: H2
 #
-# Source: U.S. Census Bureau, 2018 American Community Survey 1-Year Estimates
+# Source: U.S. Census Bureau, 2018 American Community Survey 5-Year Estimates
 
 population_rural_catch <- tibble(
   area = c(
@@ -791,7 +874,7 @@ population_rural_catch %>%
 # Year: 2018
 # Estimates: 5-Year
 # Table ID: CP03
-# 
+#
 # Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
 
 acs5_population_insurance <- tibble(
@@ -817,7 +900,7 @@ acs5_population_insurance <- tibble(
                   46251,
                   201230))
 
-acs5_population_insurance <- acs5_population_insurance %>% 
+acs5_population_insurance <- acs5_population_insurance %>%
   mutate(estimate = prop * denominator) %>%
   select(area, estimate, denominator, prop)
 
@@ -830,7 +913,7 @@ acs5_population_insurance %>%
 # Year: 2018
 # Estimates: 5-Year
 # Table ID: CP03
-# 
+#
 # Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
 
 acs5_population_insurance %>%
@@ -842,7 +925,7 @@ acs5_population_insurance %>%
 # Year: 2018
 # Estimates: 5-Year
 # Table ID: CP03
-# 
+#
 # Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
 
 acs5_population_insurance %>%
@@ -857,7 +940,7 @@ acs5_population_insurance %>%
 # Year: 2018
 # Estimates: 5-Year
 # Table ID: S1501
-# 
+#
 # Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
 
 acs5_population_edu_usa <- get_acs(
@@ -882,7 +965,7 @@ acs5_population_edu_usa %>%
 # Year: 2018
 # Estimates: 5-Year
 # Table ID: S1501
-# 
+#
 # Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
 
 acs5_population_edu_az <- get_acs(
@@ -908,7 +991,7 @@ acs5_population_edu_az %>%
 # Year: 2018
 # Estimates: 5-Year
 # Table ID: S1501
-# 
+#
 # Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
 
 acs5_population_edu_catch <- get_acs(
@@ -946,6 +1029,171 @@ acs5_population_edu_catch %>%
 # Year: 2018
 # Estimates: 5-Year
 # Table ID: S2301
-# 
+#
 # Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
 
+acs5_unemployment_usa <- get_acs(
+  geography = "us",
+  variables = c(
+    "Rate" = "S2301_C04_001"
+  ),
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5"
+)
+
+acs5_unemployment_usa
+
+# population unemployment az ----
+# EMPLOYMENT STATUS
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: S2301
+#
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_unemployment_az <- get_acs(
+  geography = "state",
+  state = "az",
+  variables = c(
+    "Rate" = "S2301_C04_001"
+  ),
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5"
+)
+
+acs5_unemployment_az
+
+# population unemployment catchment ----
+# EMPLOYMENT STATUS
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: S2301
+#
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_unemployment_catch <- get_acs(
+  geography = "county",
+  state = "az",
+  variables = c(
+    "Rate" = "S2301_C04_001"
+  ),
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5"
+)
+
+acs5_unemployment_catch %>%
+  mutate(NAME = str_replace(acs5_unemployment_catch$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  summarise(min(estimate),
+            max(estimate))
+
+# Poverty USA ----
+# POVERTY STATUS IN THE PAST 12 MONTHS
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: S1701
+#
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_poverty_usa <- get_acs(
+  geography = "us",
+  variables = c(
+    "rate" = "S1701_C03_001",
+    "number" = "S1701_C02_001",
+    "total" = "S1701_C01_001"
+  ),
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5"
+)
+
+acs5_poverty_usa %>%
+  select(NAME, variable, estimate) %>%
+  spread(key = "variable", value = "estimate") %>%
+  mutate(prop = 100*(number/total))
+
+# Poverty AZ ----
+# population unemployment az
+# POVERTY STATUS IN THE PAST 12 MONTHS
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: S1701
+#
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_poverty_az <- get_acs(
+  geography = "state",
+  state = "az",
+  variables = c(
+    "rate" = "S1701_C03_001",
+    "number" = "S1701_C02_001",
+    "total" = "S1701_C01_001"
+  ),
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5"
+)
+
+acs5_poverty_az %>%
+  select(NAME, variable, estimate) %>%
+  spread(key = "variable", value = "estimate") %>%
+  mutate(prop = 100*(number/total))
+
+# Poverty Catchment ----
+# population unemployment catch
+# POVERTY STATUS IN THE PAST 12 MONTHS
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: S1701
+#
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_poverty_catch <- get_acs(
+  geography = "county",
+  state = "az",
+  variables = c(
+    "rate" = "S1701_C03_001",
+    "number" = "S1701_C02_001",
+    "total" = "S1701_C01_001"
+  ),
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5"
+)
+
+acs5_poverty_catch %>%
+  mutate(NAME = str_replace(acs5_poverty_catch$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  select(NAME, variable, estimate) %>%
+  spread(key = "variable", value = "estimate") %>%
+  summarise(number = sum(number),
+            total = sum(total)) %>%
+  mutate(prop = 100*(number/total))
+
+
+# Food Insecurity AZ ----
+# https://www.ers.usda.gov/data-products/food-environment-atlas/go-to-the-atlas/
+# Household food insecurity
+# 3 year average 2013-2015
+
+food_insecurity <- tibble(
+"area" = c("AZ"),
+"rate" = c(.1920)
+)
+
+# Food Security in the United States: How Do States Compare?
+# https://www.ers.usda.gov/topics/food-nutrition-assistance/food-security-in-the-us/interactive-charts-and-highlights/
+
+# food insecurity 2016-2018
+# 12.4%
+
+# very low food insecurity 2016-2018
+# 5.1%
