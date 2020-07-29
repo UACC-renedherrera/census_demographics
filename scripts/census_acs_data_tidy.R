@@ -1290,3 +1290,92 @@ food_insecurity <- tibble(
 
 # very low food insecurity 2016-2018
 # 5.1%
+
+# Population Foreign Born USA ---- 
+# PLACE OF BIRTH BY NATIVITY AND CITIZENSHIP STATUS
+# Survey/Program: American Community Survey
+# Universe: Total population
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: B05002
+# 
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_foreign_born_USA <- get_acs(
+  geography = "us",
+  variables = c("foreign_born" = "B05002_013",
+                "total" = "B05002_001"),
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5"
+)
+
+acs5_foreign_born_USA %>%
+  select(!(moe)) %>%
+  spread(key = variable, 
+         value = estimate) %>%
+  mutate(prop = foreign_born / total)
+
+# Population Foreign Born AZ ---- 
+# PLACE OF BIRTH BY NATIVITY AND CITIZENSHIP STATUS
+# Survey/Program: American Community Survey
+# Universe: Total population
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: B05002
+# 
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_foreign_born_AZ <- get_acs(
+  geography = "state",
+  state = "az",
+  variables = c("foreign_born" = "B05002_013",
+                "total" = "B05002_001"),
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5"
+)
+
+acs5_foreign_born_AZ %>%
+  select(!(moe)) %>%
+  spread(key = variable, 
+         value = estimate) %>%
+  mutate(prop = foreign_born / total)
+
+# Population Foreign Born Catch ---- 
+# PLACE OF BIRTH BY NATIVITY AND CITIZENSHIP STATUS
+# Survey/Program: American Community Survey
+# Universe: Total population
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: B05002
+# 
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_foreign_born_catch <- get_acs(
+  geography = "county",
+  state = "az",
+  variables = c("foreign_born" = "B05002_013",
+                "total" = "B05002_001"),
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5"
+)
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+acs5_foreign_born_catch %>%
+  mutate(NAME = str_replace(acs5_foreign_born_catch$NAME, " County, Arizona", "")) %>% 
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  spread(key = variable, 
+         value = estimate) %>%
+  summarise(foreign_born = sum(foreign_born),
+            total = sum(total)) %>%
+  mutate(prop = foreign_born / total)
