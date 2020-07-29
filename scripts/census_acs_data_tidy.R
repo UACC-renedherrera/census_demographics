@@ -50,6 +50,99 @@ acs5_age_sex <- acs5_age_sex %>%
 # save to file
 write_rds(acs5_age_sex, "data/tidy/acs5_2018_age_sex.rds")
 
+S0101_C01_030	
+
+# population age USA ----
+# AGE AND SEX
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: S0101
+# 
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_age_USA <- get_acs(
+  geography = "us",
+  variable = c("under_18" = "S0101_C01_022",
+    "age_group_65" = "S0101_C01_030",
+               "Total" = "S0101_C01_001"),
+  year = 2018,
+  cache_table = TRUE,
+  survey = "acs5"
+)
+
+acs5_age_USA <- acs5_age_USA %>% 
+  select(!(moe)) %>%
+  spread(key = variable,
+         value = estimate)
+
+acs5_age_USA %>%
+  mutate(prop_65 = round(age_group_65 / Total, digits = 3),
+         prop_18 = round(under_18 / Total, digits = 3))
+
+# population age AZ ----
+# AGE AND SEX
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: S0101
+# 
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_age_AZ <- get_acs(
+  geography = "state",
+  state = "az",
+  variable = c("under_18" = "S0101_C01_022",
+               "age_group_65" = "S0101_C01_030",
+               "Total" = "S0101_C01_001"),
+  year = 2018,
+  cache_table = TRUE,
+  survey = "acs5"
+)
+
+acs5_age_AZ <- acs5_age_AZ %>% 
+  select(!(moe)) %>%
+  spread(key = variable,
+         value = estimate)
+
+acs5_age_AZ %>%
+  mutate(prop_65 = round(age_group_65 / Total, digits = 3),
+         prop_18 = round(under_18 / Total, digits =3))
+
+# population age UAZCC Catchment ---- 
+# AGE AND SEX
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: S0101
+# 
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_age_catch <- get_acs(
+  geography = "county",
+  state = "az",
+  variable = c("under_18" = "S0101_C01_022",
+               "age_group_65" = "S0101_C01_030",
+               "Total" = "S0101_C01_001"),
+  year = 2018,
+  cache_table = TRUE,
+  survey = "acs5"
+)
+
+acs5_age_catch <- acs5_age_catch %>%
+  mutate(NAME = str_replace(acs5_age_catch$NAME, " County, Arizona", "")) %>% 
+  select(!(moe)) %>%
+  filter(NAME %in% counties) %>%
+  spread(key = variable,
+         value = estimate)
+
+acs5_age_catch %>%
+  summarise(under_18 = sum(under_18),
+    age_group_65 = sum(age_group_65),
+            total = sum(Total)) %>%
+  mutate(prop_18 = round(under_18 / total, digits =3),
+         prop_65 = round(age_group_65 / total, digits = 3))
+
 # filter to southern az catchment
 acs5_age_sex_catch <- acs5_age_sex %>%
   filter(NAME %in% counties)
