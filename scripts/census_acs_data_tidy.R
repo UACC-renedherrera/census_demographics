@@ -616,6 +616,27 @@ acs5_population_total_az_county %>%
   filter(NAME %in% counties) %>%
   summarise(total = sum(estimate))
 
+# total population County ----
+# Survey/Program: American Community Survey
+# Universe: Total population
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: B01003
+#
+# Source: U.S. Census Bureau, 2018 American Community Survey 5-Year Estimates
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+acs5_population_total_az_county %>%
+  mutate(NAME = str_replace(acs5_population_total_az_county$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) 
+
 # population by sex usa ----
 # AGE AND SEX
 # Survey/Program: American Community Survey
@@ -669,6 +690,43 @@ acs5_age_sex %>%
   filter(NAME %in% counties) %>%
   filter(variable == "S0101_C05_001") %>%
   summarise(total = sum(estimate))
+
+# population by sex for each county ----
+# AGE AND SEX
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: S0101
+#
+# Source: U.S. Census Bureau, 2018 American Community Survey 5-Year Estimates
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+acs5_age_sex <- get_acs(
+  geography = "county",
+  variables = c(
+    "Female" = "S0101_C05_001",
+    "Total" = "S0101_C01_001"
+  ),
+  state = "AZ",
+  year = 2018,
+  cache_table = TRUE,
+  survey = "acs5"
+)
+
+acs5_age_sex %>%
+  mutate(NAME = str_replace(acs5_age_sex$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  spread(key = variable, 
+         value = estimate) %>%
+  mutate(prop = Female / Total)
 
 # population USA hispanic or latino ----
 # ACS DEMOGRAPHIC AND HOUSING ESTIMATES
@@ -737,6 +795,14 @@ acs5_hispanic_catch <- get_acs(
   survey = "acs5"
 )
 
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
 val_catch_hisp <- acs5_hispanic_catch %>%
   mutate(NAME = str_replace(acs5_hispanic_catch$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% counties,
@@ -752,6 +818,70 @@ acs5_hispanic_catch %>%
   mutate(total = val_catch_hisp,
          prop = estimate / total)
 
+# population race ethnicity for each county ----
+# ACS DEMOGRAPHIC AND HOUSING ESTIMATES
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: DP05
+#
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_catch_county_race <- get_acs(
+  geography = "county",
+  state = "AZ",
+  variables = c("Hispanic or Latino (of any race)" = "DP05_0071",
+                "White alone Not Hispanic or Latino" = "DP05_0077",
+                "Black or African American alone Not Hispanic or Latino" = "DP05_0078",
+                "American Indian and Alaska Native alone Not Hispanic or Latino" = "DP05_0079",
+                "Total" = "DP05_0070"),
+  year = 2018,
+  cache_table = TRUE,
+  survey = "acs5"
+)
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+val_catch_race <- acs5_catch_county_race %>%
+  mutate(NAME = str_replace(acs5_catch_county_race$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties,
+         variable == "Total") %>%
+  summarise(estimate = sum(estimate))
+
+race_ethnicity <- acs5_catch_county_race %>%
+  mutate(NAME = str_replace(acs5_catch_county_race$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties,
+         variable != "Total") %>%
+  select(!(moe)) %>%
+  spread(key = variable,
+         value = estimate)
+
+names(race_ethnicity)
+
+acs5_catch_county_race %>%
+  mutate(NAME = str_replace(acs5_catch_county_race$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  spread(key = variable,
+         value = estimate) %>%
+  select(NAME,
+         Total,
+         AI = 'American Indian and Alaska Native alone Not Hispanic or Latino',
+         Black = "Black or African American alone Not Hispanic or Latino",
+         Hisp = "Hispanic or Latino (of any race)",
+         White = "White alone Not Hispanic or Latino") %>%
+  mutate(AI_prop = AI / Total,
+         black_prop = Black / Total,
+         hisp_prop = Hisp / Total,
+         white_prop = White / Total) %>%
+  select(NAME, AI_prop, black_prop, hisp_prop, white_prop)
+  
 # population USA race White alone ----
 # RACE
 # Survey/Program: American Community Survey
@@ -953,6 +1083,14 @@ population_rural_catch <- tibble(
     30511,
     6446,
     NA
+  ),
+  total = c(
+    "AZ",
+    "Cochise",
+    "Pima",
+    "Pinal",
+    "Santa Cruz",
+    "Yuma"
   )
 )
 
@@ -960,6 +1098,10 @@ population_rural_catch %>%
   filter(area != "AZ") %>%
   drop_na() %>%
   summarise(total = sum(estimate))
+
+population_rural_catch %>%
+  mutate(total = 329022,
+         prop = estimate / 329022)
 
 # population uninsured usa ----
 # COMPARATIVE ECONOMIC CHARACTERISTICS
@@ -1027,7 +1169,20 @@ acs5_population_insurance %>%
             denominator = sum(denominator)) %>%
   mutate(prop = estimate / denominator)
 
-# population high school graduate usa ----
+# population uninsured county ----
+# COMPARATIVE ECONOMIC CHARACTERISTICS
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: CP03
+#
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_population_insurance %>%
+  filter(!(area == "AZ" | area == "United States")) %>%
+  mutate(prop = estimate / denominator)
+
+# population educational attainment usa ----
 # EDUCATIONAL ATTAINMENT
 # Survey/Program: American Community Survey
 # Year: 2018
@@ -1052,7 +1207,7 @@ acs5_population_edu_usa <- get_acs(
 acs5_population_edu_usa %>%
   mutate(prop = estimate / 218446071)
 
-# population high school graduate az ----
+# population educational attainment az ----
 # EDUCATIONAL ATTAINMENT
 # Survey/Program: American Community Survey
 # Year: 2018
@@ -1078,7 +1233,7 @@ acs5_population_edu_az <- get_acs(
 acs5_population_edu_az %>%
   mutate(prop = estimate / 4633932)
 
-# population high school graduate catchment ----
+# population educational attainment catchment ----
 # EDUCATIONAL ATTAINMENT
 # Survey/Program: American Community Survey
 # Year: 2018
@@ -1116,6 +1271,59 @@ acs5_population_edu_catch %>%
   mutate(denominator = val_catch_edu_den,
          prop = estimate / denominator)
 
+# population educational attainment county ----
+# EDUCATIONAL ATTAINMENT
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: S1501
+#
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+acs5_population_edu_catch <- get_acs(
+  geography = "county",
+  state = "AZ",
+  variables = c(
+    "Population 25 years and over" = "S1501_C01_006",
+    "High school graduate or higher" = "S1501_C01_014",
+    "Some college, no degree" = "S1501_C01_010",
+    "Bachelor's degree or higher" = "S1501_C01_015"
+  ),
+  year = 2018,
+  cache_table = TRUE,
+  survey = "acs5"
+)
+
+# val_catch_edu_den <- acs5_population_edu_catch %>%
+#   mutate(NAME = str_replace(acs5_population_edu_catch$NAME, " County, Arizona", "")) %>%
+#   filter(NAME %in% counties) %>%
+#   filter(variable == "Population 25 years and over") %>%
+#   summarise(estimate = sum(estimate))
+
+acs5_population_edu_catch %>%
+  mutate(NAME = str_replace(acs5_population_edu_catch$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  spread(key = variable,
+         value = estimate) %>%
+  select(NAME,
+         Total = "Population 25 years and over",
+         "some_college" = "Some college, no degree",
+         "high_school_grad" = "High school graduate or higher",
+         "college_grad" = "Bachelor's degree or higher") %>%
+  mutate(some_college_prop = some_college / Total,
+         high_school_prop = high_school_grad / Total,
+         college_grad_prop = college_grad / Total) %>%
+  select(NAME, high_school_prop, some_college_prop, college_grad_prop)
+
 # population unemployment usa ----
 # EMPLOYMENT STATUS
 # Survey/Program: American Community Survey
@@ -1133,7 +1341,7 @@ acs5_unemployment_usa <- get_acs(
   cache_table = TRUE,
   year = 2018,
   survey = "acs5"
-)
+) 
 
 acs5_unemployment_usa
 
@@ -1179,11 +1387,53 @@ acs5_unemployment_catch <- get_acs(
   survey = "acs5"
 )
 
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
 acs5_unemployment_catch %>%
   mutate(NAME = str_replace(acs5_unemployment_catch$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% counties) %>%
   summarise(min(estimate),
             max(estimate))
+
+# population unemployment county ----
+# EMPLOYMENT STATUS
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: S2301
+#
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_unemployment_catch <- get_acs(
+  geography = "county",
+  state = "az",
+  variables = c(
+    "Rate" = "S2301_C04_001"
+  ),
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5"
+)
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+acs5_unemployment_catch %>%
+  mutate(NAME = str_replace(acs5_unemployment_catch$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  select(NAME:estimate) %>%
+  mutate(estimate = estimate/100)
 
 # Poverty USA ----
 # POVERTY STATUS IN THE PAST 12 MONTHS
@@ -1262,6 +1512,14 @@ acs5_poverty_catch <- get_acs(
   survey = "acs5"
 )
 
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
 acs5_poverty_catch %>%
   mutate(NAME = str_replace(acs5_poverty_catch$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% counties) %>%
@@ -1271,6 +1529,44 @@ acs5_poverty_catch %>%
             total = sum(total)) %>%
   mutate(prop = 100*(number/total))
 
+# Poverty County ----
+# population unemployment catch
+# POVERTY STATUS IN THE PAST 12 MONTHS
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: S1701
+#
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_poverty_catch <- get_acs(
+  geography = "county",
+  state = "az",
+  variables = c(
+    "rate" = "S1701_C03_001",
+    "number" = "S1701_C02_001",
+    "total" = "S1701_C01_001"
+  ),
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5"
+)
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+acs5_poverty_catch %>%
+  mutate(NAME = str_replace(acs5_poverty_catch$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  select(NAME, variable, estimate) %>%
+  spread(key = "variable", value = "estimate") %>%
+  select(NAME, rate) %>%
+  mutate(rate = rate/100)
 
 # Food Insecurity AZ ----
 # https://www.ers.usda.gov/data-products/food-environment-atlas/go-to-the-atlas/
