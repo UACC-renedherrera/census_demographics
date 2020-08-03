@@ -92,13 +92,77 @@ az_catch_sex_by_age %>%
 
 # for the catchment altogether; calculate the proportion of hispanic or latino age 55+
 az_catch_sex_by_age %>%
-  summarize(
+  summarise(
     hispanic_total = sum(hispanic_population),
     catch_total = sum(estimate)
   ) %>%
   mutate(hispanic_percent = hispanic_total / catch_total) %>%
   kable(col.names = c("Age 55+", "Total", "Prop 55+"),
         caption = "ACS 5 Year (2014-2018) population estimates for Hispanic or Latino")
+
+
+# age of hispanic 54 years and younger ---- 
+hisp_age_cat <- get_acs(
+  geography = "county",
+  state = "az",
+  variables = c(
+    "Total" = "B01001I_001",
+    "male <5" = "B01001I_003",
+    "male 5-9" = "B01001I_004",
+    "male 10-14" = "B01001I_005",
+    "male 15-17" = "B01001I_006",
+    "male 18-19" = "B01001I_007",
+    "male 20-24" = "B01001I_008",
+    "male 25-29" = "B01001I_009",
+    "male 30-34" = "B01001I_010",
+    "male 35-44" = "B01001I_011",
+    "male 45-54" = "B01001I_012",
+    "female <5" = "B01001I_018",
+    "female 5-9" = "B01001I_019",
+    "female 10-14" = "B01001I_020",
+    "female 15-17" = "B01001I_021",
+    "female 18-19" = "B01001I_022",
+    "female 20-24" = "B01001I_023",
+    "female 25-29" = "B01001I_024",
+    "female 30-34" = "B01001I_025",
+    "female 35-44" = "B01001I_026",
+    "female 45-54" = "B01001I_027"
+  ),
+  survey = "acs5",
+  cache_table = TRUE,
+  year = 2018
+)
+
+hisp_age_cat_total <- hisp_age_cat %>% 
+  mutate(NAME = str_replace(hisp_age_cat$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% c(
+    "Cochise",
+    "Pima",
+    "Pinal",
+    "Santa Cruz",
+    "Yuma"
+  )) %>%
+  filter(variable == "Total") %>%
+  select(NAME, total = estimate)
+
+hisp_age_cat <- hisp_age_cat %>% 
+  mutate(NAME = str_replace(hisp_age_cat$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% c(
+    "Cochise",
+    "Pima",
+    "Pinal",
+    "Santa Cruz",
+    "Yuma"
+  )) %>%
+  filter(variable != "Total") %>%
+  group_by(NAME) %>%
+  summarise(estimate = sum(estimate))
+
+full_join(hisp_age_cat, hisp_age_cat_total) %>%
+  summarise(estimate = sum(estimate),
+            total = sum(total)) %>%
+  mutate(prop = estimate / total)
+
 
 # SEX BY AGE (All race) TOTAL ----
 # determine the total population in the county

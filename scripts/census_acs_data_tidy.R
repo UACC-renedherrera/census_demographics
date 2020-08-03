@@ -1568,6 +1568,25 @@ acs5_poverty_catch %>%
   select(NAME, rate) %>%
   mutate(rate = rate/100)
 
+# Poverty Catchment Hispanic ---- 
+
+S1701_C03_020
+
+acs5_poverty_catch_hisp <- get_acs(
+  geography = "county",
+  state = "az",
+  variables = c(
+    "rate" = "S1701_C03_001",
+    "number" = "S1701_C02_001",
+    "total" = "S1701_C01_001"
+  ),
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5"
+)
+
+
+
 # Food Insecurity AZ ----
 # https://www.ers.usda.gov/data-products/food-environment-atlas/go-to-the-atlas/
 # Household food insecurity
@@ -1675,3 +1694,38 @@ acs5_foreign_born_catch %>%
   summarise(foreign_born = sum(foreign_born),
             total = sum(total)) %>%
   mutate(prop = foreign_born / total)
+
+
+# Median age Hispanic or Latino ---- 
+# MEDIAN AGE BY SEX (HISPANIC OR LATINO)
+# Survey/Program: American Community Survey
+# Universe: People who are Hispanic or Latino
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: B01002I
+# 
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+median_age <- get_acs(
+  geography = "county",
+  state = "az",
+  variables = c("median_age_hisp" = "B01002I_001"),
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5"
+)
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+median_age %>% 
+  mutate(NAME = str_replace(median_age$NAME, " County, Arizona", "")) %>% 
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  spread(key = variable, 
+         value = estimate)
