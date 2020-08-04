@@ -1182,6 +1182,59 @@ acs5_population_insurance %>%
   filter(!(area == "AZ" | area == "United States")) %>%
   mutate(prop = estimate / denominator)
 
+# population uninsured catchment hispanic ----
+# HEALTH INSURANCE COVERAGE STATUS BY AGE (HISPANIC OR LATINO)
+# Survey/Program: American Community Survey
+# Universe: Hispanic or Latino civilian noninstitutionalized population
+# Year: 2018
+# Estimates: 1-Year
+# Table ID: B27001I
+# 
+# Source: U.S. Census Bureau, 2018 American Community Survey 1-Year Estimates
+
+acs1_population_insurance_hisp <- get_acs(geography = "county",
+                                          state = "az",
+                                          #table = "B27001I",
+                                          year = 2018,
+                                          survey = "acs1",
+                                          variables = c(
+                                            "Total" = "B27001I_001",
+                                            "age 6 under" = "B27001I_004",
+                                            "age 6-18" = "B27001I_007",
+                                            "age 19-25" = "B27001I_010",
+                                            "age 26-34" = "B27001I_013",
+                                            "age 35-44" = "B27001I_016",
+                                            "age 45-54" = "B27001I_019",
+                                            "age 55-64" = "B27001I_022",
+                                            "age 65-74" = "B27001I_025",
+                                            "age 75 over" = "B27001I_028"
+                                          )
+                                          )
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+# total denominator
+acs1_population_insurance_hisp %>%
+  mutate(NAME = str_replace(acs1_population_insurance_hisp$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  filter(variable == "Total") %>%
+  summarise(estimate = sum(estimate)) 
+
+# numerator 
+acs1_population_insurance_hisp %>%
+  mutate(NAME = str_replace(acs1_population_insurance_hisp$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  filter(variable != "Total") %>%
+  summarise(estimate = sum(estimate)) %>%
+  mutate(total = 683967,
+         prop = estimate / total)
+
 # population educational attainment usa ----
 # EDUCATIONAL ATTAINMENT
 # Survey/Program: American Community Survey
@@ -1301,6 +1354,47 @@ acs5_population_edu_catch <- get_acs(
   cache_table = TRUE,
   survey = "acs5"
 )
+
+# population educational attainment catchment hispanic ----
+# EDUCATIONAL ATTAINMENT
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: S1501
+#
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_population_edu_catch_hisp <- get_acs(
+  geography = "county",
+  state = "AZ",
+  variables = c(
+    "Population 25 years and over" = "S1501_C01_052",
+    "Bachelor's degree or higher" = "S1501_C01_054"
+  ),
+  year = 2018,
+  cache_table = TRUE,
+  survey = "acs5"
+)
+
+# for entire catchment
+acs5_population_edu_catch_hisp %>%
+  mutate(NAME = str_replace(acs5_population_edu_catch_hisp$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  select(NAME, variable, estimate) %>%
+  spread(key = variable,
+         value = estimate) %>%
+  summarise(college = sum(`Bachelor's degree or higher`),
+            total = sum(`Population 25 years and over`)) %>%
+  mutate(prop = college / total)
+
+# for each county in catchment
+acs5_population_edu_catch_hisp %>%
+  mutate(NAME = str_replace(acs5_population_edu_catch_hisp$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  select(NAME, variable, estimate) %>%
+  spread(key = variable,
+         value = estimate) %>%
+  mutate(prop = `Bachelor's degree or higher` / `Population 25 years and over`)
 
 # val_catch_edu_den <- acs5_population_edu_catch %>%
 #   mutate(NAME = str_replace(acs5_population_edu_catch$NAME, " County, Arizona", "")) %>%
@@ -1570,15 +1664,13 @@ acs5_poverty_catch %>%
 
 # Poverty Catchment Hispanic ---- 
 
-S1701_C03_020
+# S1701_C03_020
 
 acs5_poverty_catch_hisp <- get_acs(
   geography = "county",
   state = "az",
   variables = c(
-    "rate" = "S1701_C03_001",
-    "number" = "S1701_C02_001",
-    "total" = "S1701_C01_001"
+    "percent_hisp" = "S1701_C03_020"
   ),
   cache_table = TRUE,
   year = 2018,
@@ -1586,6 +1678,12 @@ acs5_poverty_catch_hisp <- get_acs(
 )
 
 
+acs5_poverty_catch_hisp %>%
+  mutate(NAME = str_replace(acs5_poverty_catch_hisp$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  summarise(min(estimate),
+            max(estimate))
+  
 
 # Food Insecurity AZ ----
 # https://www.ers.usda.gov/data-products/food-environment-atlas/go-to-the-atlas/
@@ -1695,6 +1793,45 @@ acs5_foreign_born_catch %>%
             total = sum(total)) %>%
   mutate(prop = foreign_born / total)
 
+# Population Foreign Born Catch hispanic ---- 
+# PLACE OF BIRTH (HISPANIC OR LATINO) IN THE UNITED STATES
+# Survey/Program: American Community Survey
+# Universe: Hispanic or Latino population in the United States
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: B06004I
+# 
+# Although the American Community Survey (ACS) produces population, demographic and housing unit estimates, it is the Census Bureau's Population Estimates Program that produces and disseminates the official estimates of the population for the nation, states, counties, cities, and towns and estimates of housing units for states and counties.
+# 
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_foreign_born_catch_hisp <- get_acs(
+  geography = "county",
+  state = "az",
+  variables = c("foreign_born" = "B06004I_005",
+                "total" = "B06004I_001"),
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5"
+)
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+acs5_foreign_born_catch_hisp %>%
+  mutate(NAME = str_replace(acs5_foreign_born_catch_hisp$NAME, " County, Arizona", "")) %>% 
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  spread(key = variable, 
+         value = estimate) %>%
+  summarise(foreign_born = sum(foreign_born),
+            total = sum(total)) %>%
+  mutate(prop = foreign_born / total)
 
 # Median age Hispanic or Latino ---- 
 # MEDIAN AGE BY SEX (HISPANIC OR LATINO)
@@ -1729,3 +1866,84 @@ median_age %>%
   select(!(moe)) %>%
   spread(key = variable, 
          value = estimate)
+
+# median age usa ---- 
+
+#tbd 
+
+# median age az ---- 
+
+#tbd
+
+# median age catchment ---- 
+
+acs5_median_age_catchment <- get_acs(
+  geography = "county",
+  variables = c(
+    "median_age" = "B01002_001"
+  ),
+  cache_table = TRUE,
+  year = 2018,
+  state = "az",
+  survey = "acs5"
+)
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+acs5_median_age_catchment %>% 
+  mutate(NAME = str_replace(acs5_median_age_catchment$NAME, " County, Arizona", "")) %>% 
+  filter(NAME %in% counties) %>%
+  summarise(min(estimate),
+            max(estimate))
+
+# language other than english usa ---- 
+# from table S1601
+# language spoken at home: speak a language other than english
+
+# 21.5%
+
+# language other than english az ---- 
+# from table S1601
+# language spoken at home: speak a language other than english
+
+# 27.2%
+
+
+# language other than english catchment ---- 
+# from table S1601
+# language spoken at home: speak a language other than english
+
+acs5_language_catch <- get_acs(  geography = "county",
+                                 variables = c(
+                                   "non_english" = "S1601_C01_003",
+                                   "total" = "S1601_C01_001"
+                                 ),
+                                 cache_table = TRUE,
+                                 year = 2018,
+                                 state = "az",
+                                 survey = "acs5"
+)
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+acs5_language_catch  %>%
+  mutate(NAME = str_replace(acs5_language_catch$NAME, " County, Arizona", "")) %>% 
+  filter(NAME %in% counties) %>%
+  select(NAME, variable, estimate) %>%
+  spread(key = variable, 
+         value = estimate) %>%
+  summarise(non_english = sum(non_english),
+            total = sum(total)) %>%
+  mutate(prop = non_english / total)

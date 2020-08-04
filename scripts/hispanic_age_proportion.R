@@ -1,7 +1,7 @@
-# script will produce 
+# script will produce
 # 1. table of hispanic proportion in each catchment county
-# 2. table of total hispanic proportion for catchment 
-# 3. median age by sex of hispanic in each catchment county 
+# 2. table of total hispanic proportion for catchment
+# 3. median age by sex of hispanic in each catchment county
 
 # set up ----
 library(here)
@@ -33,10 +33,10 @@ counties <- unique(az_sex_by_age$NAME)
 
 # use stringr to clean up county name
 # and save
-az_sex_by_age <- az_sex_by_age %>% 
+az_sex_by_age <- az_sex_by_age %>%
   mutate(NAME = str_replace(az_sex_by_age$NAME, " County, Arizona", ""))
 
-# filter to southern az catchment 
+# filter to southern az catchment
 az_catch_sex_by_age <- az_sex_by_age %>%
   filter(NAME %in% c(
     "Cochise",
@@ -51,7 +51,7 @@ var_acs_2018_acs5 <- load_variables(2018, "acs5", cache = FALSE)
 # view(acs_20128_var)
 
 # SEX BY AGE (HISPANIC OR LATINO)
-# save variables of interest to value 
+# save variables of interest to value
 age_sex_var <- c(
   "B01001I_001", # total estimate for each county
   "B01001I_013", # estimate for male 55-64 years for each county
@@ -62,15 +62,15 @@ age_sex_var <- c(
   "B01001I_029", # estimate for female 65-74 years for each county
   "B01001I_030", # estimate for female 75-84 years for each county
   "B01001I_031" # estimate for female 85<= years for each county
-) 
+)
 
-# group by county and 
+# group by county and
 # apply filter to show desired age groups total and 55-85+
 az_catch_sex_by_age <- az_catch_sex_by_age %>%
   group_by(NAME) %>%
   filter(variable %in% age_sex_var)
 
-# filter to show total population (hispanic or latino) for each county 
+# filter to show total population (hispanic or latino) for each county
 age_sex_var_totals <- az_catch_sex_by_age %>%
   filter(variable == "B01001I_001")
 
@@ -83,7 +83,7 @@ az_catch_sex_by_age <- az_catch_sex_by_age %>%
 az_catch_sex_by_age <- inner_join(az_catch_sex_by_age, age_sex_var_totals)
 
 # for each county, calculate the proportion of hispanic or latino age 55+
-# select columns and display data grouped by county 
+# select columns and display data grouped by county
 az_catch_sex_by_age %>%
   mutate(percentage_hispanic = hispanic_population / estimate) %>%
   select(NAME, hispanic_population, estimate, percentage_hispanic) %>%
@@ -101,7 +101,7 @@ az_catch_sex_by_age %>%
         caption = "ACS 5 Year (2014-2018) population estimates for Hispanic or Latino")
 
 
-# age of hispanic 54 years and younger ---- 
+# age of hispanic 54 years and younger ----
 hisp_age_cat <- get_acs(
   geography = "county",
   state = "az",
@@ -133,7 +133,7 @@ hisp_age_cat <- get_acs(
   year = 2018
 )
 
-hisp_age_cat_total <- hisp_age_cat %>% 
+hisp_age_cat_total <- hisp_age_cat %>%
   mutate(NAME = str_replace(hisp_age_cat$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% c(
     "Cochise",
@@ -145,7 +145,7 @@ hisp_age_cat_total <- hisp_age_cat %>%
   filter(variable == "Total") %>%
   select(NAME, total = estimate)
 
-hisp_age_cat <- hisp_age_cat %>% 
+hisp_age_cat <- hisp_age_cat %>%
   mutate(NAME = str_replace(hisp_age_cat$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% c(
     "Cochise",
@@ -178,10 +178,10 @@ az_sex_by_age_tot <- get_acs(
 
 # use stringr to clean up county name
 # and save
-az_sex_by_age_tot <- az_sex_by_age_tot %>% 
+az_sex_by_age_tot <- az_sex_by_age_tot %>%
   mutate(NAME = str_replace(az_sex_by_age_tot$NAME, " County, Arizona", ""))
 
-# filter to southern az catchment 
+# filter to southern az catchment
 az_sex_by_age_tot <- az_sex_by_age_tot %>%
   filter(NAME %in% c(
     "Cochise",
@@ -201,18 +201,18 @@ age55 <- c("S0101_C01_013", #age 55-59 years
            "S0101_C01_019") #age 85+ years
 
 # filter total all race population estimate to age55+
-az_sex_by_age_tot <- az_sex_by_age_tot %>% 
+az_sex_by_age_tot <- az_sex_by_age_tot %>%
   filter(variable %in% age55)
 
 # prepare table to join
 # set variables
-az_sex_by_age_tot <- az_sex_by_age_tot %>% 
+az_sex_by_age_tot <- az_sex_by_age_tot %>%
   transmute(NAME = NAME,
             variable = variable,
             tot_pop = estimate)
 
 # calculate total only
-az_sex_by_age_tot <- az_sex_by_age_tot %>% 
+az_sex_by_age_tot <- az_sex_by_age_tot %>%
   group_by(NAME) %>%
   summarize(total_pop = sum(tot_pop))
 
@@ -240,7 +240,7 @@ az_med_age <- get_acs(
   state = "AZ"
 )
 
-az_med_age <- az_med_age %>% 
+az_med_age <- az_med_age %>%
   mutate(NAME = str_replace(az_med_age$NAME, " County, Arizona", ""))
 
 az_catch_med_age <- az_med_age %>%
@@ -253,15 +253,15 @@ az_catch_med_age <- az_med_age %>%
   ))
 
 # for MEDIAN AGE BY SEX (HISPANIC OR LATINO)
-# save variables of interest to value 
+# save variables of interest to value
 med_age_var <- c(
-  "B01002I_001", #Estimate!!Median age --!!Total 
+  "B01002I_001", #Estimate!!Median age --!!Total
   "B01002I_002", #Estimate!!Median age --!!Male
   "B01002I_003" #Estimate!!Median age --!!Female
-) 
+)
 
 # display median age for hispanic latino in each county
-# group by county and 
+# group by county and
 # apply filter to show median age by sex of Hispanic in each county
 az_catch_med_age %>%
   group_by(NAME) %>%
