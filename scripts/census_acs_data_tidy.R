@@ -50,7 +50,7 @@ acs5_age_sex <- acs5_age_sex %>%
 # save to file
 write_rds(acs5_age_sex, "data/tidy/acs5_2018_age_sex.rds")
 
-S0101_C01_030	
+# S0101_C01_030	
 
 # population age USA ----
 # AGE AND SEX
@@ -71,6 +71,8 @@ acs5_age_USA <- get_acs(
   survey = "acs5"
 )
 
+write_rds(acs5_age_USA, "data/tidy/acs5_population_age_18_65.rds")
+
 acs5_age_USA <- acs5_age_USA %>% 
   select(!(moe)) %>%
   spread(key = variable,
@@ -79,6 +81,12 @@ acs5_age_USA <- acs5_age_USA %>%
 acs5_age_USA %>%
   mutate(prop_65 = round(age_group_65 / Total, digits = 3),
          prop_18 = round(under_18 / Total, digits = 3))
+
+acs5_age_USA %>%
+  filter(variable != "Total") %>%
+  ggplot(mapping = aes(x = variable, y = estimate)) +
+  geom_bar(stat = "identity", fill = "variable")
+
 
 # population age AZ ----
 # AGE AND SEX
@@ -128,6 +136,25 @@ acs5_age_catch <- get_acs(
   cache_table = TRUE,
   survey = "acs5"
 )
+
+acs5_age_catch <- acs5_age_catch %>%
+  mutate(NAME = str_replace(acs5_age_catch$NAME, " County, Arizona", "")) %>% 
+  select(!(moe)) %>%
+  filter(NAME %in% counties)
+
+acs5_population_age <- full_join(acs5_age_USA, acs5_age_AZ)
+
+acs5_population_age <- full_join(acs5_population_age, acs5_age_catch)
+
+write_rds(acs5_population_age, "data/tidy/acs5_population_age_18_65.rds")
+
+# plot 
+
+acs5_population_age %>%
+  filter(variable != "Total") %>%
+  ggplot(mapping = aes(x = NAME, y = estimate, fill = variable)) +
+  geom_bar(position = "fill", stat = "identity")
+
 
 acs5_age_catch <- acs5_age_catch %>%
   mutate(NAME = str_replace(acs5_age_catch$NAME, " County, Arizona", "")) %>% 
