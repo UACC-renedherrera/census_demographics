@@ -13,9 +13,12 @@ library(dataMaid)
 # load variable tables to find variables of interest
 
 var_acs_2018_acs5 <- load_variables(2018, "acs5", cache = TRUE)
-#var_acs_2018_acs5_profile <- load_variables(2018, "acs5/profile", cache = TRUE)
-#var_acs_2018_acs5_subject <- load_variables(2018, "acs5/subject", cache = TRUE)
+var_acs_2018_acs5_profile <- load_variables(2018, "acs5/profile", cache = TRUE)
+var_acs_2018_acs5_subject <- load_variables(2018, "acs5/subject", cache = TRUE)
 var_acs_2018_acs1 <- load_variables(2018, "acs1", cache = TRUE)
+
+
+# write_csv(var_acs_2018_acs5, "data/tidy/ACS5_2018_variables.csv")
 
 # save catchment counties to value
 counties <- c(
@@ -652,6 +655,43 @@ acs5_age_sex_catch %>%
   mutate(NAME = str_replace(acs5_age_sex_catch$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% counties) %>%
   summarise(total = sum(estimate))
+
+# population by sex female for catchment each race ---- 
+
+acs5_sex_catch_race <- get_acs(geography = "county",
+                               state = "az",
+                               variables = c(
+                                 "white" = "B01001H_017",
+                                 "hispanic" = "B01001I_017",
+                                 "amer_indian" = "B01001C_017",
+                                 "total" = "B01001_026"
+                               ),
+                               cache_table = TRUE,
+                               year = 2018,
+                               survey = "acs5"
+                                 )
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+acs5_sex_catch_race %>%
+  mutate(NAME = str_replace(acs5_sex_catch_race$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  spread(key = variable, 
+         value = estimate) %>%
+  summarise(white = sum(white),
+            hispanic = sum(hispanic),
+            amer_indian = sum(amer_indian),
+            total = sum(total)) %>%
+  mutate(prop_white = white / total,
+         prop_hisp = hispanic / total,
+         prop_ai = amer_indian / total)  
 
 # population by sex for each county ----
 # AGE AND SEX
@@ -1445,6 +1485,189 @@ acs5_population_edu_catch %>%
   mutate(denominator = val_catch_edu_den,
          prop = estimate / denominator)
 
+# education attainment catchment race ----
+# high school graduate or equivalency
+
+acs5_edu_catch_race <- get_acs(
+  geography = "county",
+  state = "az",
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5",
+  variables = c(
+    "white_total" = "S1501_C01_031",
+    "white_hs" = "S1501_C01_032",
+    "hisp_total" = "S1501_C01_052",
+    "hisp_hs" = "S1501_C01_053",
+    "ai_total" = "S1501_C01_037",
+    "ai_hs" = "S1501_C01_038"
+  )
+)
+
+acs5_edu_catch_race
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+# white hs grad
+acs5_edu_catch_race_white <- acs5_edu_catch_race %>%
+  mutate(NAME = str_replace(acs5_edu_catch_race$NAME, " County, Arizona", "")) %>%
+  filter(variable %in% c("white_total", "white_hs")) %>%
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  filter(variable != "white_total") %>%
+  summarise(white_edu = sum(estimate))
+
+# white total
+acs5_edu_catch_race_white_total <- acs5_edu_catch_race %>%
+  mutate(NAME = str_replace(acs5_edu_catch_race$NAME, " County, Arizona", "")) %>%
+  filter(variable %in% c("white_total", "white_hs")) %>%
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  filter(variable == "white_total") %>%
+  summarise(white_edu = sum(estimate))
+
+# calculate proportion
+acs5_edu_catch_race_white / acs5_edu_catch_race_white_total
+
+# hisp hs grad 
+acs5_edu_catch_race_hisp <- acs5_edu_catch_race %>%
+  mutate(NAME = str_replace(acs5_edu_catch_race$NAME, " County, Arizona", "")) %>%
+  filter(variable %in% c("hisp_total", "hisp_hs")) %>%
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  filter(variable != "hisp_total") %>%
+  summarise(white_edu = sum(estimate))
+
+# hisp total
+acs5_edu_catch_race_hisp_total <- acs5_edu_catch_race %>%
+  mutate(NAME = str_replace(acs5_edu_catch_race$NAME, " County, Arizona", "")) %>%
+  filter(variable %in% c("hisp_total", "hisp_hs")) %>%
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  filter(variable == "hisp_total") %>%
+  summarise(white_edu = sum(estimate))
+
+# calculate proportion
+acs5_edu_catch_race_hisp / acs5_edu_catch_race_hisp_total
+
+# american indian hs grad 
+acs5_edu_catch_race_ai <- acs5_edu_catch_race %>%
+  mutate(NAME = str_replace(acs5_edu_catch_race$NAME, " County, Arizona", "")) %>%
+  filter(variable %in% c("ai_total", "ai_hs")) %>%
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  filter(variable != "ai_total") %>%
+  summarise(white_edu = sum(estimate))
+
+# american indian total
+acs5_edu_catch_race_ai_total <- acs5_edu_catch_race %>%
+  mutate(NAME = str_replace(acs5_edu_catch_race$NAME, " County, Arizona", "")) %>%
+  filter(variable %in% c("ai_total", "ai_hs")) %>%
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  filter(variable == "ai_total") %>%
+  summarise(white_edu = sum(estimate))
+
+# calculate proportion
+acs5_edu_catch_race_ai / acs5_edu_catch_race_ai_total
+
+# college graduate 
+
+acs5_edu_catch_race <- get_acs(
+  geography = "county",
+  state = "az",
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5",
+  variables = c(
+    "white_total" = "S1501_C01_031",
+    "white_bach" = "S1501_C01_033",
+    "hisp_total" = "S1501_C01_052",
+    "hisp_bach" = "S1501_C01_054",
+    "ai_total" = "S1501_C01_037",
+    "ai_bach" = "S1501_C01_039"
+  )
+)
+
+acs5_edu_catch_race
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+# white hs grad
+acs5_edu_catch_race_white <- acs5_edu_catch_race %>%
+  mutate(NAME = str_replace(acs5_edu_catch_race$NAME, " County, Arizona", "")) %>%
+  filter(variable %in% c("white_total", "white_bach")) %>%
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  filter(variable != "white_total") %>%
+  summarise(white_edu = sum(estimate))
+
+# white total
+acs5_edu_catch_race_white_total <- acs5_edu_catch_race %>%
+  mutate(NAME = str_replace(acs5_edu_catch_race$NAME, " County, Arizona", "")) %>%
+  filter(variable %in% c("white_total", "white_bach")) %>%
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  filter(variable == "white_total") %>%
+  summarise(white_edu = sum(estimate))
+
+# calculate proportion
+acs5_edu_catch_race_white / acs5_edu_catch_race_white_total
+
+# hisp hs grad 
+acs5_edu_catch_race_hisp <- acs5_edu_catch_race %>%
+  mutate(NAME = str_replace(acs5_edu_catch_race$NAME, " County, Arizona", "")) %>%
+  filter(variable %in% c("hisp_total", "hisp_bach")) %>%
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  filter(variable != "hisp_total") %>%
+  summarise(white_edu = sum(estimate))
+
+# hisp total
+acs5_edu_catch_race_hisp_total <- acs5_edu_catch_race %>%
+  mutate(NAME = str_replace(acs5_edu_catch_race$NAME, " County, Arizona", "")) %>%
+  filter(variable %in% c("hisp_total", "hisp_bach")) %>%
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  filter(variable == "hisp_total") %>%
+  summarise(white_edu = sum(estimate))
+
+# calculate proportion
+acs5_edu_catch_race_hisp / acs5_edu_catch_race_hisp_total
+
+# american indian hs grad 
+acs5_edu_catch_race_ai <- acs5_edu_catch_race %>%
+  mutate(NAME = str_replace(acs5_edu_catch_race$NAME, " County, Arizona", "")) %>%
+  filter(variable %in% c("ai_total", "ai_bach")) %>%
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  filter(variable != "ai_total") %>%
+  summarise(white_edu = sum(estimate))
+
+# american indian total
+acs5_edu_catch_race_ai_total <- acs5_edu_catch_race %>%
+  mutate(NAME = str_replace(acs5_edu_catch_race$NAME, " County, Arizona", "")) %>%
+  filter(variable %in% c("ai_total", "ai_bach")) %>%
+  filter(NAME %in% counties) %>%
+  select(!(moe)) %>%
+  filter(variable == "ai_total") %>%
+  summarise(white_edu = sum(estimate))
+
+# calculate proportion
+acs5_edu_catch_race_ai / acs5_edu_catch_race_ai_total
+
 # population educational attainment county ----
 # EDUCATIONAL ATTAINMENT
 # Survey/Program: American Community Survey
@@ -1613,6 +1836,43 @@ counties <- c(
 acs5_unemployment_catch %>%
   mutate(NAME = str_replace(acs5_unemployment_catch$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% counties) %>%
+  summarise(min(estimate),
+            max(estimate))
+
+# population unemployment catchment race ----
+# EMPLOYMENT STATUS
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: S2301
+#
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_unemployment_catch_race <- get_acs(
+  geography = "county",
+  state = "az",
+  variables = c(
+    "white" = "S2301_C04_020",
+    "hisp" = "S2301_C04_019",
+    "ai" = "S2301_C04_014"
+  ),
+  cache_table = TRUE,
+  year = 2018,
+  survey = "acs5"
+)
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+acs5_unemployment_catch_race %>%
+  mutate(NAME = str_replace(acs5_unemployment_catch_race$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  group_by(variable) %>%
   summarise(min(estimate),
             max(estimate))
 
