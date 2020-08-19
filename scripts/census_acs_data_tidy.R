@@ -1043,7 +1043,7 @@ acs5_population_race_az_county %>%
 # Year: 2010
 # Table ID: H2
 #
-# Source: U.S. Census Bureau, 2018 American Community Survey 5-Year Estimates
+# Source: U.S. Census Bureau, 2010 Census.
 
 population_rural_usa <- 27684999 / 131704730
 population_rural_usa
