@@ -2461,3 +2461,107 @@ acs5_language_catch  %>%
   summarise(non_english = sum(non_english),
             total = sum(total)) %>%
   mutate(prop = non_english / total)
+
+# educational attainment some college white and hispanic ----
+# table C15002A 
+# SEX BY EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER (WHITE ALONE)
+# Survey/Program: American Community Survey
+# Universe: White alone population 25 years and over
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: C15002A
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+some_college <- get_acs(geography = "county",
+                        state = "az",
+                        variables = c("total_white" = "C15002H_001",
+                                      "some_college_white" = "C15002H_005",
+                                      "total_hisp" = "C15002I_001",
+                                      "some_college_hisp" = "C15002I_005"),
+                        year = 2018,
+                        survey = "acs5")
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+some_college%>%
+  mutate(NAME = str_replace(some_college$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  select(NAME, variable, estimate) %>%
+  spread(key = variable,
+         value = estimate) %>%
+  summarise(hisp_total = sum(total_hisp),
+            white_total = sum(total_white),
+            hisp_coll = sum(some_college_hisp),
+            white_coll = sum(some_college_white)) %>%
+  mutate(hisp_prop_coll = hisp_coll / hisp_total,
+         white_prop_coll = white_coll / white_total)
+
+# median household income ----
+# INCOME IN THE PAST 12 MONTHS (IN 2018 INFLATION-ADJUSTED DOLLARS)
+# Survey/Program: American Community Survey
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: S1901
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+median_income_usa <- get_acs(geography = "us",
+                         variables = c("Median Household Income" = "S1901_C01_012"),
+                         year = 2018,
+                         survey = "acs5")
+
+median_income_usa 
+
+median_income_az <- get_acs(geography = "state",
+                            state = "az",
+                             variables = c("Median Household Income" = "S1901_C01_012"),
+                             year = 2018,
+                             survey = "acs5")
+
+median_income_az 
+
+median_income_catchment <- get_acs(geography = "county",
+                            state = "az",
+                            variables = c("Median Household Income" = "S1901_C01_012"),
+                            year = 2018,
+                            survey = "acs5")
+
+median_income_catchment %>%
+  mutate(NAME = str_replace(median_income_catchment$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  select(NAME, variable, estimate)
+
+median_income_catchment %>%
+  mutate(NAME = str_replace(median_income_catchment$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  select(NAME, variable, estimate) %>%
+  summarise(estimate = mean())
+
+# median household income race in catchment ----
+# MEDIAN HOUSEHOLD INCOME IN THE PAST 12 MONTHS (IN 2018 INFLATION-ADJUSTED DOLLARS)
+# Survey/Program: American Community Survey
+# Universe: Households with a householder who is specified race
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: B19013I
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+median_income_catch_race <- get_acs(geography = "county",
+                                    state = "az",
+                                    variables = c("white" = "B19013H_001",
+                                                  "hispanic" = "B19013I_001",
+                                                  "ai" = "B19013C_001"),
+                                    year = 2018,
+                                    survey = "acs5")
+ 
+median_income_catch_race%>%
+  mutate(NAME = str_replace(median_income_catch_race$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  select(NAME, variable, estimate) %>%
+  spread(key = variable,
+         value = estimate)
