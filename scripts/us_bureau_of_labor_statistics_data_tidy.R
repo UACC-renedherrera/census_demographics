@@ -47,7 +47,7 @@ unique(labor$Period)
 
 labor %>%
   filter(`State FIPS Code` == "04",
-         Period == "May-20",
+         Period == "Jun-20(p)",
          `County FIPS Code` %in% c("003",
                                    "019",
                                    "021",
