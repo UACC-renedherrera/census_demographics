@@ -83,7 +83,7 @@ labor_az <- read_delim("data/raw/us_bureau_of_labor_states.txt",
                                    ),
                                    skip = 117,
                            trim_ws = TRUE,
-                           n_max = 43
+                           n_max = 44
                                    )
 
 labor_az <- labor_az %>%
@@ -98,7 +98,6 @@ labor_az %>%
   select(year,
          civilian_labor_unemployed_percent) %>%
   tail()
-
 
 
 # County level
@@ -141,7 +140,7 @@ unique(labor$Period)
 # calculate rate
 labor %>%
   filter(`State FIPS Code` == "04",
-         Period == "Jun-20(p)",
+         Period == "Jun-20",
          `County FIPS Code` %in% c("003",
                                    "019",
                                    "021",
@@ -154,7 +153,7 @@ labor %>%
 # show rate for each county
 labor %>%
   filter(`State FIPS Code` == "04",
-         Period == "Jun-20(p)",
+         Period == "Jun-20",
          `County FIPS Code` %in% c("003",
                                    "019",
                                    "021",
@@ -163,3 +162,29 @@ labor %>%
   select("Area Title",
          Period,
          "Unemployed Rate")
+
+
+# most recent monthly data for AZ
+# read data
+labor_az_monthly <- read_excel(
+  "data/raw/us_bureau_of_labor_az_SeriesReport-20200908192755_c65033.xlsx",
+  skip = 10,
+  n_max = 11,
+  col_names = TRUE)
+
+labor_az_monthly
+
+labor_az_monthly[11,]
+
+
+# most recent monthly data for usa 
+# read data 
+labor_usa_monthly <- read_excel(
+  "data/raw/us_bureau_of_labor_usa_SeriesReport-20200908193628_3819c3.xlsx",
+  skip = 11,
+  n_max = 12,
+  col_names = TRUE)
+
+labor_usa_monthly
+
+labor_usa_monthly[11,]
