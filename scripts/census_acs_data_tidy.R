@@ -142,6 +142,13 @@ acs5_age_catch <- get_acs(
   survey = "acs5"
 )
 
+#### check this function in real life 
+rename_counties <- function(x){
+  x %>%
+    mutate(NAME = str_replace(x$NAME, " County, Arizona", ""))
+}
+####
+
 acs5_age_catch <- acs5_age_catch %>%
   mutate(NAME = str_replace(acs5_age_catch$NAME, " County, Arizona", "")) %>%
   select(!(moe)) %>%
@@ -586,7 +593,7 @@ acs5_population_total_az_county %>%
   mutate(NAME = str_replace(acs5_population_total_az_county$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% counties)
 
-# population by sex usa ----
+# sex female usa ----
 # AGE AND SEX
 # Survey/Program: American Community Survey
 # Year: 2018
@@ -609,7 +616,7 @@ acs5_age_sex_usa %>%
   spread(key = variable, value = estimate) %>%
   mutate(prop = Female/total)
 
-# population by sex az ----
+# sex female az ----
 # AGE AND SEX
 # Survey/Program: American Community Survey
 # Year: 2018
@@ -633,7 +640,7 @@ acs5_age_sex_az %>%
   spread(key = variable, value = estimate) %>%
   mutate(prop = Female/total)
 
-# population by sex catchment ----
+# sex female catchment ----
 # AGE AND SEX
 # Survey/Program: American Community Survey
 # Year: 2018
@@ -670,7 +677,7 @@ acs5_age_sex_catch %>%
             total = sum(total)) %>%
   mutate(prop = Female/total)
 
-# for each county 
+# for each county
 acs5_age_sex_catch %>%
   mutate(NAME = str_replace(acs5_age_sex_catch$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% counties) %>%
@@ -686,7 +693,9 @@ acs5_sex_catch_race <- get_acs(geography = "county",
                                  "white" = "B01001H_017",
                                  "hispanic" = "B01001I_017",
                                  "amer_indian" = "B01001C_017",
-                                 "total" = "B01001_026"
+                                 "white_total" = "B01001H_001",
+                                 "hisp_total" = "B01001I_001",
+                                 "ai_total" = "B01001C_001"
                                ),
                                cache_table = TRUE,
                                year = 2018,
@@ -710,10 +719,15 @@ acs5_sex_catch_race %>%
   summarise(white = sum(white),
             hispanic = sum(hispanic),
             amer_indian = sum(amer_indian),
-            total = sum(total)) %>%
-  mutate(prop_white = white / total,
-         prop_hisp = hispanic / total,
-         prop_ai = amer_indian / total)
+            white_total = sum(white_total),
+            hisp_total = sum(hisp_total),
+            ai_total = sum(ai_total)) %>%
+  mutate(prop_white = white / white_total,
+         prop_hisp = hispanic / hisp_total,
+         prop_ai = amer_indian / ai_total) %>%
+  select(prop_white,
+         prop_hisp,
+         prop_ai)
 
 # population by sex for each county ----
 # AGE AND SEX
@@ -1175,7 +1189,7 @@ population_rural_catch %>%
 population_rural_catch %>%
   filter(area != "AZ") %>%
   mutate(prop = estimate / total)
-  
+
 
 # uninsured usa ----
 # COMPARATIVE ECONOMIC CHARACTERISTICS
@@ -1525,7 +1539,7 @@ acs5_population_edu_az %>%
 # Year: 2018
 # Estimates: 5-Year
 # Table ID: S1501
-# 
+#
 # Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
 
 acs5_population_edu_catch <- get_acs(
@@ -1548,7 +1562,7 @@ val_catch_edu_den <- acs5_population_edu_catch %>%
   filter(variable == "Population 25 years and over") %>%
   summarise(estimate = sum(estimate))
 
-# for catchment 
+# for catchment
 acs5_population_edu_catch %>%
   mutate(NAME = str_replace(acs5_population_edu_catch$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% counties) %>%
@@ -1558,13 +1572,13 @@ acs5_population_edu_catch %>%
   mutate(denominator = val_catch_edu_den,
          prop = estimate / denominator)
 
-# for counties 
+# for counties
 acs5_population_edu_catch %>%
   mutate(NAME = str_replace(acs5_population_edu_catch$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% counties) %>%
   select(!(moe)) %>%
   spread(key = variable, value = estimate) %>%
-  select(NAME, 
+  select(NAME,
          HS = `High school graduate or higher`,
          some_college = `Some college, no degree`,
          bach = `Bachelor's degree or higher`,
@@ -1572,7 +1586,7 @@ acs5_population_edu_catch %>%
   mutate(HS_prop = HS / total,
          some_college_prop = some_college / total,
          bach_prop = bach / total)
-  
+
   group_by(variable) %>%
   summarise(estimate = sum(estimate)) %>%
   mutate(denominator = val_catch_edu_den,
@@ -1857,7 +1871,7 @@ acs5_population_edu_catch %>%
          college_grad_prop = college_grad / Total) %>%
   select(NAME, high_school_prop, some_college_prop, college_grad_prop)
 
-# population unemployment usa ----
+# unemployment usa ----
 # EMPLOYMENT STATUS
 # Survey/Program: American Community Survey
 # Year: 2018
@@ -1878,7 +1892,7 @@ acs5_unemployment_usa <- get_acs(
 
 acs5_unemployment_usa
 
-# population unemployment az ----
+# unemployment az ----
 # EMPLOYMENT STATUS
 # Survey/Program: American Community Survey
 # Year: 2018
@@ -1900,7 +1914,7 @@ acs5_unemployment_az <- get_acs(
 
 acs5_unemployment_az
 
-# population unemployment catchment ----
+# unemployment catchment ----
 # EMPLOYMENT STATUS
 # Survey/Program: American Community Survey
 # Year: 2018
@@ -1934,7 +1948,7 @@ acs5_unemployment_catch %>%
   summarise(min(estimate),
             max(estimate))
 
-# population unemployment catchment race ----
+# unemployment catchment race ----
 # EMPLOYMENT STATUS
 # Survey/Program: American Community Survey
 # Year: 2018
@@ -2011,7 +2025,7 @@ acs5_unemployment_catch %>%
 # Year: 2018
 # Estimates: 5-Year
 # Table ID: S1701
-# 
+#
 # Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
 
 acs5_poverty_usa <- get_acs(
@@ -2509,8 +2523,84 @@ acs5_language_catch  %>%
             total = sum(total)) %>%
   mutate(prop = non_english / total)
 
+# language other than English Hispanic or Latino ----
+# LANGUAGE SPOKEN AT HOME BY ABILITY TO SPEAK ENGLISH FOR THE POPULATION 5 YEARS AND OVER (HISPANIC OR LATINO)
+# Survey/Program: American Community Survey
+# Universe: Hispanic or Latino population 5 years and over
+# Year: 2018
+# Estimates: 5-Year
+# Table ID: B16006
+#
+# Source: U.S. Census Bureau, 2014-2018 American Community Survey 5-Year Estimates
+
+acs5_language_hispanic_usa <- get_acs(
+  geography = "us",
+  variables = c(
+    "total" = "B16006_001",
+    "only_Eng" = "B16006_002"
+  ),
+  year = 2018,
+  survey = "acs5"
+)
+
+# USA
+acs5_language_hispanic_usa %>%
+  select(NAME, variable, estimate) %>%
+  spread(key = variable,
+         value = estimate) %>%
+  mutate(prop_non_eng = 1- only_Eng / total)
+
+# AZ
+acs5_language_hispanic_az <- get_acs(
+  geography = "state",
+  state = "az",
+  variables = c(
+    "total" = "B16006_001",
+    "only_Eng" = "B16006_002"
+  ),
+  year = 2018,
+  survey = "acs5"
+)
+
+acs5_language_hispanic_az %>%
+  select(NAME, variable, estimate) %>%
+  spread(key = variable,
+         value = estimate) %>%
+  mutate(prop_non_eng = 1- only_Eng / total)
+
+# catchment altogether
+acs5_language_hispanic_catch <- get_acs(
+  geography = "county",
+  state = "az",
+  variables = c(
+    "total" = "B16006_001",
+    "only_Eng" = "B16006_002"
+  ),
+  year = 2018,
+  survey = "acs5"
+)
+
+counties <- c(
+  "Cochise",
+  "Pima",
+  "Pinal",
+  "Santa Cruz",
+  "Yuma"
+)
+
+acs5_language_hispanic_catch %>%
+  mutate(NAME = str_replace(acs5_language_hispanic_catch$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties) %>%
+  select(NAME, variable, estimate) %>%
+  spread(key = variable,
+         value = estimate) %>%
+  summarize(only_Eng = sum(only_Eng),
+            total = sum(total)) %>%
+  mutate(prop_non_eng = 1- only_Eng / total)
+
+
 # educational attainment some college white and hispanic ----
-# table C15002A 
+# table C15002A
 # SEX BY EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER (WHITE ALONE, NOT HISPANIC OR LATINO)
 # Survey/Program: American Community Survey
 # Universe: White alone population 25 years and over
@@ -2538,7 +2628,7 @@ counties <- c(
   "Yuma"
 )
 
-some_college%>%
+some_college %>%
   mutate(NAME = str_replace(some_college$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% counties) %>%
   select(NAME, variable, estimate) %>%
@@ -2568,7 +2658,7 @@ median_income_usa <- get_acs(geography = "us",
                          year = 2018,
                          survey = "acs5")
 
-median_income_usa 
+median_income_usa
 
 median_income_az <- get_acs(geography = "state",
                             state = "az",
@@ -2576,7 +2666,7 @@ median_income_az <- get_acs(geography = "state",
                              year = 2018,
                              survey = "acs5")
 
-median_income_az 
+median_income_az
 
 median_income_catchment <- get_acs(geography = "county",
                             state = "az",
@@ -2611,7 +2701,7 @@ median_income_catch_race <- get_acs(geography = "county",
                                                   "ai" = "B19013C_001"),
                                     year = 2018,
                                     survey = "acs5")
- 
+
 median_income_catch_race%>%
   mutate(NAME = str_replace(median_income_catch_race$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% counties) %>%
@@ -2684,7 +2774,7 @@ age_65_catchment %>%
          value = estimate) %>%
   mutate(prop = `65_and_over` / total)
 
-# catchment total 
+# catchment total
 age_65_catchment %>%
   mutate(NAME = str_replace(age_65_catchment$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% counties) %>%
@@ -2696,42 +2786,89 @@ age_65_catchment %>%
   mutate(prop = `65_and_over` / total)
 
 # catchment counties race
-age_65_catchment_race <- get_acs(
+# WHITE ALONE, NOT HISPANIC OR LATINO
+age_65_catchment_race_white <- get_acs(
   geography = "county",
   state = "az",
-  variables = c("65_over_white" = "S0103_C02_014",
-                "65_over_hisp" = "S0103_C02_013",
-                "65_over_ai" = "S0103_C02_008"),
+  variables = c(
+    "white_total" = "B01001H_001",
+    "white_male_65-74" = "B01001H_014",
+    "white_male_75-84" = "B01001H_015",
+    "white_male_85" = "B01001H_016",
+    "white_female_65-74" = "B01001H_029",
+    "white_female_75-84" = "B01001H_030",
+    "white_female_85" = "B01001H_031"
+  ),
   year = 2018,
   survey = "acs5")
 
-age_65_catchment_race %>%
-  mutate(NAME = str_replace(age_65_catchment_race$NAME, " County, Arizona", "")) %>%
-  filter(NAME %in% counties) %>%
-  select(NAME, variable, estimate) %>%
-  spread(key = variable,
-         value = estimate) 
-
-# white: min/max
-age_65_catchment_race %>%
-  mutate(NAME = str_replace(age_65_catchment_race$NAME, " County, Arizona", "")) %>%
+age_65_catchment_race_white_total <- age_65_catchment_race_white %>%
+  mutate(NAME = str_replace(age_65_catchment_race_white$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% counties,
-         variable == "65_over_white") %>%
-  summarise(min(estimate),
-            max(estimate))
+         variable == "white_total") %>%
+  summarize(white_total = (sum(estimate)))
 
-# hispanic: min/max
-age_65_catchment_race %>%
-  mutate(NAME = str_replace(age_65_catchment_race$NAME, " County, Arizona", "")) %>%
+age_65_catchment_race_white %>%
+  mutate(NAME = str_replace(age_65_catchment_race_white$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% counties,
-         variable == "65_over_hisp") %>%
-  summarise(min(estimate),
-            max(estimate))
+         variable != "white_total") %>%
+  summarize(white_65 = (sum(estimate))) %>%
+  mutate(prop = white_65 /  age_65_catchment_race_white_total)
 
-# american indian: min/max
-age_65_catchment_race %>%
-  mutate(NAME = str_replace(age_65_catchment_race$NAME, " County, Arizona", "")) %>%
+# HISPANIC OR LATINO
+age_65_catchment_race_hisp <- get_acs(
+  geography = "county",
+  state = "az",
+  variables = c(
+    "hisp_total" = "B01001I_001",
+    "hisp_male_65-74" = "B01001I_014",
+    "hisp_male_75-84" = "B01001I_015",
+    "hisp_male_85" = "B01001I_016",
+    "hisp_female_65-74" = "B01001I_029",
+    "hisp_female_75-84" = "B01001I_030",
+    "hisp_female_85" = "B01001I_031"
+  ),
+  year = 2018,
+  survey = "acs5")
+
+age_65_catchment_race_hisp_total <- age_65_catchment_race_hisp %>%
+  mutate(NAME = str_replace(age_65_catchment_race_hisp$NAME, " County, Arizona", "")) %>%
   filter(NAME %in% counties,
-         variable == "65_over_ai") %>%
-  summarise(min(estimate),
-            max(estimate))
+         variable == "hisp_total") %>%
+  summarize(hisp_total = (sum(estimate)))
+
+age_65_catchment_race_hisp %>%
+  mutate(NAME = str_replace(age_65_catchment_race_hisp$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties,
+         variable != "hisp_total") %>%
+  summarize(hisp_65 = (sum(estimate))) %>%
+  mutate(prop = hisp_65 /  age_65_catchment_race_hisp_total)
+
+# AMERICAN INDIAN AND ALASKA NATIVE ALONE
+age_65_catchment_race_ai <- get_acs(
+  geography = "county",
+  state = "az",
+  variables = c(
+    "ai_total" = "B01001C_001",
+    "ai_male_65-74" = "B01001C_014",
+    "ai_male_75-84" = "B01001C_015",
+    "ai_male_85" = "B01001C_016",
+    "ai_female_65-74" = "B01001C_029",
+    "ai_female_75-84" = "B01001C_030",
+    "ai_female_85" = "B01001C_031"
+  ),
+  year = 2018,
+  survey = "acs5")
+
+age_65_catchment_race_ai_total <- age_65_catchment_race_ai %>%
+  mutate(NAME = str_replace(age_65_catchment_race_ai$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties,
+         variable == "ai_total") %>%
+  summarize(ai_total = (sum(estimate)))
+
+age_65_catchment_race_ai %>%
+  mutate(NAME = str_replace(age_65_catchment_race_ai$NAME, " County, Arizona", "")) %>%
+  filter(NAME %in% counties,
+         variable != "ai_total") %>%
+  summarize(ai_65 = (sum(estimate))) %>%
+  mutate(prop = ai_65 /  age_65_catchment_race_ai_total)
