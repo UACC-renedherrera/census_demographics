@@ -43,10 +43,10 @@ build_table_for_slide <- function(x){
     select(NAME, variable, estimate) %>%
     spread(key = NAME,
            value = estimate) %>%
-    select(variable, `United States`, Arizona) %>%
-    mutate(Catchment = "34.3-40.6")
+    select(variable, `United States`, Arizona)
 }
 
 median_age %>% 
   select_areas_for_slide %>%
-  build_table_for_slide()
+  build_table_for_slide()  %>%
+  mutate(Catchment = "34.3-40.6")
