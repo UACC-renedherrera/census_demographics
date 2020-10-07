@@ -5,7 +5,7 @@ library(tidyverse)
 library(knitr)
 
 # table format should be
-# | variable | geography | race | sex | year | estimate | table | source |
+# | variable | geography | race | sex | year | estimate | source |
 
 # median age
 # age 65 and over
@@ -19,6 +19,7 @@ library(knitr)
 
 #
 
+# median age
 median_age <- read_rds("data/tidy/acs5_median_age.rds")
 
 # function to select areas to include on slides and visualizations
@@ -46,7 +47,9 @@ build_table_for_slide <- function(x){
     select(variable, `United States`, Arizona)
 }
 
-median_age %>% 
+median_age %>%
   select_areas_for_slide %>%
   build_table_for_slide()  %>%
   mutate(Catchment = "34.3-40.6")
+
+# age 65 and over
