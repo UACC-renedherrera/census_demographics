@@ -41,7 +41,7 @@ vignettes/*.pdf
 # data folders
 data/
 
-# reports 
+# reports
 communication/reports
 
 # dashboards
@@ -56,3 +56,6 @@ communication/dashboards/*.pptx
 *.pptx
 *.html
 *.png
+
+# ignore GIS folder
+gis/
