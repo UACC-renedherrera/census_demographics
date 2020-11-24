@@ -59,3 +59,6 @@ communication/dashboards/*.pptx
 
 # ignore GIS folder
 gis/
+
+# ignore figures folder
+figures/
