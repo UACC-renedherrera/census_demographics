@@ -56,6 +56,7 @@ communication/dashboards/*.pptx
 *.pptx
 *.html
 *.png
+*.svg
 
 # ignore GIS folder
 gis/
