@@ -1,9 +1,15 @@
 # setup ----
+# load package libraries 
 library(here)
 library(tidycensus)
 library(tidyverse)
 library(sf)
+library(tigris)
 
+# set options 
+options(tigris_use_cache = TRUE)
+
+# collect desired data from ACS ---- 
 # find variables 
 acs_variables <- load_variables(year = 2019, dataset = "acs5/profile", cache = TRUE)
 
@@ -53,3 +59,18 @@ st_write(obj = no_health,
          dsn = "gis/no_health/no_health.shp",
          layer = "estimate")
 
+# get primary roads from tigris 
+tigris_primary_roads <- primary_roads()
+
+# save to disk 
+st_write(obj = tigris_primary_roads,
+         dsn = "gis/tigris_primary_roads/primary_roads.shp",
+         layer = "MTFCC")
+
+# get primary roads from tigris 
+tigris_primary_secondary_roads <- primary_secondary_roads(state = "AZ")
+
+# save to disk 
+st_write(obj = tigris_primary_secondary_roads,
+         dsn = "gis/tigris_primary_secondary_roads/primary_secondary_roads.shp",
+         layer = "MTFCC")
