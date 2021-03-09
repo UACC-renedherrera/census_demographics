@@ -74,3 +74,28 @@ tigris_primary_secondary_roads <- primary_secondary_roads(state = "AZ")
 st_write(obj = tigris_primary_secondary_roads,
          dsn = "gis/tigris_primary_secondary_roads/primary_secondary_roads.shp",
          layer = "MTFCC")
+
+# congressional district boundaries
+tigris_cd <- congressional_districts() %>%
+  filter(STATEFP == "04")
+
+# inspect
+plot(tigris_cd)
+st_crs(tigris_cd)
+
+# save to disk
+st_write(obj = tigris_cd,
+         dsn = "gis/tigris_congressional/tigris_congressional_districts.shp",
+         layer = "NAMELSAD")
+
+# state legislative district boundaries 
+tigris_ld <- state_legislative_districts(state = "04")
+
+# inspect
+plot(tigris_ld)
+st_crs(tigris_ld)
+
+# save to disk
+st_write(obj = tigris_cd,
+         dsn = "gis/tigris_state_legislative/tigris_state_legislative_districts.shp",
+         layer = "NAMELSAD")
