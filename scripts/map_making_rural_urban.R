@@ -8,6 +8,12 @@ library(choroplethrZip)
 library(choroplethr)
 library(choroplethrMaps)
 library(readxl)
+library(tigris)
+library(geojsonio)
+library(sf)
+library(ggthemes)
+
+options(tigris_use_cache = TRUE)
 
 data(county.regions)
 
@@ -25,7 +31,65 @@ glimpse(population)
 population
 population %>%
   distinct(county_name)
+#####
 
+az_zip_codes <- zctas()
+
+spatial_population <- geo_join(
+  spatial_data = az_zip_codes,
+  data_frame = population,
+  by_sp = "ZCTA5CE10",
+  by_df = "ZIP",
+  how = "inner"
+)
+
+st_write(obj = spatial_population,
+         dsn = "data/spatial/population_rural_urban/ruca.shp"
+         )
+
+spatial_az_counties <- readRDS("../UAZCC_COE_Program_Evaluation/data/tidy/spatial_az_counties.rds")
+
+spatial_population %>%
+  ggplot() +
+  geom_sf(data = spatial_az_counties) +
+  geom_sf(mapping = aes(fill = `2010 Population of the 2010 ZCTA`)) +
+  scale_fill_gradient(low = "#81D3EB", high = "#001C48") +
+  theme_void() +
+  xlim(-115, -109) +
+  ylim(31.2, 33.5) +
+  labs(title = "2010 Population of each Zip Code")
+
+spatial_population %>%
+  ggplot() +
+  geom_sf(data = spatial_az_counties) +
+  geom_sf(mapping = aes(fill = `Primary RUCA Code`)) +
+  scale_fill_gradient(high = "#81D3EB", low = "#001C48") +
+  theme_void() +
+  xlim(-115, -109) +
+  ylim(31.2, 33.5) +
+  labs(title = "RUCA designation",
+       subtitle = "1 = urban, 10 = rural")
+
+
+
+
+spatial_list <- geojson_list(spatial_population$geometry)
+centroid(spatial_list)
+centroid(st_geometry(spatial_population$geometry))
+centroid(st_simplify(spatial_population$geometry))
+st_multipolygon(spatial_population)
+st_area(spatial_population)
+st_make_grid(spatial_population)
+st_cast(x = spatial_population, to = "multipoint")
+spatial_coordinates <- st_coordinates(spatial_population)
+
+
+ggplot() +
+  stat_sf_coordinates(data = spatial_population, mapping = aes(color = `Primary RUCA Code`)) 
+
+
+
+#####
 # county basemap
 pop_county <- population %>%
   select(county.name = county_name, 
